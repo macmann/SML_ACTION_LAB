@@ -8,6 +8,6 @@ export const metadata = { title: "Admin sign-in" };
 
 export default async function Login() {
   const state = await accessState();
-  if (state !== "claimed") redirect(state === "authenticated" ? "/assistant" : "/setup");
+  if (state !== "claimed") redirect(state === "authenticated" ? "/" : "/setup");
   return <AuthPanel title="Admin sign-in"><AuthForm /></AuthPanel>;
 }

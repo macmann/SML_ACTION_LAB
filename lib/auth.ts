@@ -1,62 +1,30 @@
-import { createHmac, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
-import { z } from "zod";
-import { configPath, createPrivateFile, readOptionalPrivateFile } from "./data.mjs";
+import { cookies, headers } from "next/headers";
+import { sessionDuration, store } from "./bootstrap.mjs";
 
-export const sessionCookie = "slm_session";
-export const sessionDuration = 8 * 60 * 60;
-const derive = promisify(scrypt);
-const adminPath = configPath("admin.json");
-const adminSchema = z.object({
-  salt: z.string().regex(/^[a-f0-9]{32}$/),
-  passwordHash: z.string().regex(/^[a-f0-9]{128}$/),
-  signingKey: z.string().regex(/^[a-f0-9]{64}$/),
-});
-type Admin = z.infer<typeof adminSchema>;
+export const sessionCookie = "__Host-slm_session";
 
-export async function getAdmin(): Promise<Admin | null> {
-  const raw = await readOptionalPrivateFile(adminPath);
-  if (raw === null) return null;
+export async function currentAdmin() {
+  const state = await store.load();
+  const token = (await cookies()).get(sessionCookie)?.value;
+  return await store.validSession(state, token) ? state : null;
+}
+
+export async function requireSameOrigin() {
+  const request = await headers();
+  const origin = request.get("origin");
+  const host = request.get("x-forwarded-host") ?? request.get("host");
+  if (!origin || !host) return false;
   try {
-    return adminSchema.parse(JSON.parse(raw));
+    const url = new URL(origin);
+    return url.origin === origin && url.host === host.toLowerCase() &&
+      (url.protocol === "https:" || (url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)));
   } catch {
-    throw new Error("The administrator configuration is invalid.");
+    return false;
   }
 }
 
-function equal(left: string, right: string): boolean {
-  const a = Buffer.from(left);
-  const b = Buffer.from(right);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
-export async function claim(code: string, password: string): Promise<Admin | null> {
-  if (await getAdmin()) return null;
-  const pairing = await readOptionalPrivateFile(configPath("pairing-code"));
-  if (!pairing || !equal(code, pairing.trim())) return null;
-  const salt = randomBytes(16).toString("hex");
-  const admin = {
-    salt,
-    passwordHash: (await derive(password, salt, 64) as Buffer).toString("hex"),
-    signingKey: randomBytes(32).toString("hex"),
-  };
-  return await createPrivateFile(adminPath, JSON.stringify(admin)) ? admin : null;
-}
-
-export async function verifyPassword(admin: Admin, password: string): Promise<boolean> {
-  return equal((await derive(password, admin.salt, 64) as Buffer).toString("hex"), admin.passwordHash);
-}
-
-function sign(admin: Admin, payload: string): string {
-  return createHmac("sha256", Buffer.from(admin.signingKey, "hex")).update(payload).digest("base64url");
-}
-
-export function createSession(admin: Admin): string {
-  const payload = String(Math.floor(Date.now() / 1000) + sessionDuration) + "." + randomBytes(16).toString("hex");
-  return payload + "." + sign(admin, payload);
-}
-
-export function validSession(admin: Admin, token: string | undefined): boolean {
-  const match = token?.match(/^(\d{1,12})\.([a-f0-9]{32})\.([\w-]{43})$/);
-  return !!match && Number(match[1]) > Date.now() / 1000 && equal(match[3], sign(admin, match[1] + "." + match[2]));
+export async function setSession(epoch: string) {
+  (await cookies()).set(sessionCookie, await store.createSession(epoch), {
+    httpOnly: true, secure: true, sameSite: "strict", path: "/", maxAge: sessionDuration,
+  });
 }

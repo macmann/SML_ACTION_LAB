@@ -5,7 +5,7 @@ export const sections = {
   invoices: { title: "Invoices", description: "Invoice workflows are planned for a later phase." },
   "model-arena": { title: "Model Arena", description: "Model comparisons require a configured provider. This release makes no model calls." },
   logs: { title: "Logs", description: "Structured activity history is planned for a later phase. Container startup diagnostics are available in Coolify." },
-  settings: { title: "Settings", description: "The administrator account is set up. Database and model provider configuration will be added in a later phase." },
+  settings: { title: "Settings", description: "Manage runtime configuration and preferences." },
 };
 
 export function isSection(section: string): section is keyof typeof sections {

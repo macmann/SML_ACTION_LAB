@@ -12,18 +12,21 @@ async function temporaryRoot(t) {
   return root;
 }
 
-test("initialization creates private paths and keeps the original pairing code", async (t) => {
+test("initialization creates private paths and preserves independent keys", async (t) => {
   const root = await temporaryRoot(t);
   await initializeData(root);
-  const code = configPath("pairing-code", root);
-  const value = await readFile(code, "utf8");
-  assert.match(value, /^[\w-]{32}\n$/);
+  const master = await readFile(configPath("master.key", root), "utf8");
+  const session = await readFile(configPath("session.key", root), "utf8");
+  assert.ok(/^[a-f0-9]{64}$/.test(master) && /^[a-f0-9]{64}$/.test(session) && master !== session);
   await initializeData(root);
-  assert.equal(await readFile(code, "utf8"), value);
+  assert.ok(await readFile(configPath("master.key", root), "utf8") === master);
+  assert.ok(await readFile(configPath("session.key", root), "utf8") === session);
   for (const name of dataDirectories) {
     assert.equal((await lstat(join(root, name))).mode & 0o777, 0o700);
   }
-  assert.equal((await lstat(code)).mode & 0o777, 0o600);
+  for (const name of ["bootstrap.json", "master.key", "session.key", "bootstrap.lock"]) {
+    assert.equal((await lstat(configPath(name, root))).mode & 0o777, 0o600);
+  }
 });
 
 test("an attempted concurrent claim can create the file only once", async (t) => {
@@ -45,7 +48,7 @@ test("initialization rejects readable-by-others configuration files", async (t) 
   const root = await temporaryRoot(t);
   await initializeData(root);
   const admin = configPath("admin.json", root);
-  await writeFile(admin, "{}");
+  await writeFile(admin, "{}", { mode: 0o600 });
   await chmod(admin, 0o644);
   await assert.rejects(initializeData(root), /must be private/);
 });

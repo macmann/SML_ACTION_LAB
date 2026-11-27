@@ -1,43 +1,53 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, stat, writeFile } from "node:fs/promises";
+import { store } from "./lib/bootstrap.mjs";
 
 const root = "http://127.0.0.1:3000";
 const visit = (path, options = {}) => fetch(root + path, { redirect: "manual", ...options });
-const readiness = async (setup) => {
-  const response = await visit("/api/health/ready");
-  assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), {
-    status: "not_ready", setup, database: "not_configured", provider: "not_configured",
-  });
-};
 
-async function submit(path, fields, cookie) {
+async function readiness(stage, database = "not_configured", provider = "not_configured") {
+  const response = await visit("/api/health/ready");
+  assert.equal(response.status, stage === "ready" ? 200 : 503);
+  assert.deepEqual(await response.json(), {
+    status: stage === "ready" ? "ready" : "not_ready",
+    setup: stage === "unclaimed" ? "unclaimed" : "claimed",
+    database, provider, stage,
+  });
+}
+
+const htmlValue = (value) => value.replaceAll(/&(?:quot|amp|lt|gt|#x27);/g, (entity) => ({
+  "&quot;": '"', "&amp;": "&", "&lt;": "<", "&gt;": ">", "&#x27;": "'",
+})[entity]);
+
+async function submit(path, fields, { cookie, operation, origin = root } = {}) {
   const response = await visit(path, { headers: cookie ? { Cookie: cookie } : {} });
   assert.equal(response.status, 200);
   const page = await response.text();
-  const field = page.match(/name="(\$ACTION_REF_[^"]+)"/);
-  assert.ok(field, "Expected a progressively enhanced server action form");
-  const htmlInputs = page.matchAll(/<input[^>]*type="hidden"[^>]*>/g);
+  const forms = [...page.matchAll(/<form\b[^>]*>[\s\S]*?<\/form>/g)].map(([form]) => form);
+  const selected = forms.find((form) => operation
+    ? [...form.matchAll(/<input[^>]+>/g)].some(([input]) =>
+      input.includes('name="operation"') && input.includes('value="' + operation + '"'))
+    : /\$ACTION_REF_/.test(form));
+  assert.ok(selected, "Expected a server action form");
   const form = new FormData();
-  for (const [html] of htmlInputs) {
+  for (const [html] of selected.matchAll(/<input[^>]*type="hidden"[^>]*>/g)) {
     const name = html.match(/name="([^"]+)"/)?.[1];
-    if (!name?.startsWith("$ACTION_")) continue;
-    const value = html.match(/value="([^"]*)"/)?.[1] ?? "";
-    form.append(name, value.replaceAll(/&(?:quot|amp|lt|gt|#x27);/g, (entity) => ({
-      "&quot;": '"', "&amp;": "&", "&lt;": "<", "&gt;": ">", "&#x27;": "'",
-    })[entity]));
+    if (!name) continue;
+    form.append(name, htmlValue(html.match(/value="([^"]*)"/)?.[1] ?? ""));
   }
-  for (const [name, value] of Object.entries(fields)) form.append(name, value);
-  return visit(path, { method: "POST", body: form, headers: { Origin: root, ...(cookie ? { Cookie: cookie } : {}) } });
+  for (const [name, value] of Object.entries(fields)) form.set(name, value);
+  return visit(path, { method: "POST", body: form, headers: { Origin: origin, ...(cookie ? { Cookie: cookie } : {}) } });
 }
 
-function sessionFrom(response) {
+function sessionFrom(response, destination) {
   assert.equal(response.status, 303);
-  assert.equal(response.headers.get("location"), "/assistant");
+  assert.equal(response.headers.get("location"), destination);
   const header = response.headers.get("set-cookie") ?? "";
-  assert.match(header, /HttpOnly/i);
-  assert.match(header, /SameSite=strict/i);
+  for (const flag of [/^__Host-slm_session=/, /HttpOnly/i, /Secure/i, /SameSite=strict/i]) {
+    assert.ok(flag.test(header), "Session cookie must have the expected name and security flags");
+  }
   return header.split(";")[0];
 }
 
@@ -47,12 +57,22 @@ const liveness = await visit("/api/health/live");
 assert.equal(liveness.status, 200);
 assert.deepEqual(await liveness.json(), { status: "alive" });
 const passwordFile = "/app/data/tmp/smoke-password";
+
 if (process.argv.includes("persisted")) {
-  await readiness("claimed");
+  await readiness("ready", "configured", "skipped");
   assert.equal((await visit("/assistant")).headers.get("location"), "/login");
   const password = await readFile(passwordFile, "utf8");
-  assert.ok(sessionFrom(await submit("/login", { password })));
-  console.log("Admin claim survived restart and the password still works.");
+  const cookie = sessionFrom(await submit("/login", { password }), "/assistant");
+  const { settings } = await store.load();
+  assert.equal(settings.databaseGeneration, 2);
+  assert.ok((await store.decrypt("database", settings.database)).includes("/replacement"));
+  assert.equal(settings.preferences.timezone, "Europe/Berlin");
+  const recovered = randomBytes(24).toString("base64url");
+  execFileSync(process.execPath, ["scripts/operator.mjs", "reset-password"], { input: recovered + "\n" });
+  assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).headers.get("location"), "/login");
+  assert.notEqual((await submit("/login", { password })).status, 303);
+  assert.ok(sessionFrom(await submit("/login", { password: recovered }), "/assistant"));
+  console.log("Admin and encrypted settings survived restart, and console recovery revoked the session.");
 } else {
   await readiness("unclaimed");
   for (const path of ["/", "/assistant", "/documents", "/tasks", "/invoices", "/model-arena", "/logs", "/settings"]) {
@@ -60,20 +80,71 @@ if (process.argv.includes("persisted")) {
     assert.equal(response.status, 307);
     assert.equal(response.headers.get("location"), "/setup");
   }
+  const password = randomBytes(24).toString("base64url");
+  const code = await store.rotateToken();
   const setup = await visit("/setup");
   assert.equal(setup.status, 200);
-  assert.match(await setup.text(), /Claim this instance/);
-  const { writeFile } = await import("node:fs/promises");
-  const password = randomBytes(24).toString("base64url");
-  const code = (await readFile("/app/data/config/pairing-code", "utf8")).trim();
-  await submit("/setup", { code: "a".repeat(32), password });
+  const html = await setup.text();
+  assert.match(html, /Claim this instance/);
+  assert.ok(!html.includes(code), "Pairing token must never appear in HTML");
+  const crossOrigin = await submit("/setup", { code, password }, { origin: "https://unrelated.invalid" });
+  assert.notEqual(crossOrigin.status, 303);
   await readiness("unclaimed");
-  const cookie = sessionFrom(await submit("/setup", { code, password }));
-  assert.equal((await visit("/", { headers: { Cookie: cookie } })).headers.get("location"), "/assistant");
+  await submit("/setup", { code: "a".repeat(43), password });
+  await readiness("unclaimed");
+
+  const cookie = sessionFrom(await submit("/setup", { code, password }), "/settings");
   await readiness("claimed");
+  assert.equal((await visit("/", { headers: { Cookie: cookie } })).headers.get("location"), "/settings");
   assert.equal((await visit("/setup")).headers.get("location"), "/login");
   assert.equal((await visit("/assistant", { headers: { Cookie: cookie + "invalid" } })).headers.get("location"), "/login");
-  assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).status, 200);
+
+  const dbPassword = process.env.SLM_TEST_DB_PASSWORD;
+  const providerKey = process.env.SLM_TEST_PROVIDER_KEY;
+  assert.ok(providerKey, "The model server requires a generated fixture key");
+  assert.ok(dbPassword, "The test database requires a generated fixture password");
+  const dbUrl = "postgresql://slm_fixture:" + dbPassword + "@db-fixture:5432/";
+  const suffix = "?sslmode=disable";
+  const save = async (operation, fields = {}) => {
+    const result = await submit("/settings", fields, { cookie, operation });
+    assert.equal(result.status, 200);
+    const body = await result.text();
+    assert.ok(!body.includes(dbPassword) && !body.includes(providerKey), "Credentials must not appear in HTML");
+    return body;
+  };
+
+  await save("database", { url: dbUrl + "fixture" + suffix });
+  await readiness("database_configured", "configured");
+  assert.equal((await store.load()).settings.databaseGeneration, 1);
+  await save("database", { url: dbUrl + "replacement" + suffix });
+  assert.equal((await store.load()).settings.databaseGeneration, 1, "Replacement must require confirmation");
+  await save("database", { url: dbUrl + "missing" + suffix, confirm: "on" });
+  assert.equal((await store.load()).settings.databaseGeneration, 1, "Failed probes must preserve active settings");
+  await save("database", { url: dbUrl + "replacement" + suffix, confirm: "on" });
+  assert.equal((await store.load()).settings.databaseGeneration, 2);
+  await save("database");
+  assert.equal((await store.load()).settings.databaseGeneration, 2, "Blank input must preserve the active database");
+  await save("distil", { endpoint: "https://169.254.169.254/v1", model: "fixture", custom: "on", privateNetwork: "on" });
+  assert.equal((await store.load()).settings.distil, undefined);
+  const provider = { endpoint: "https://model-fixture:8443/v1", key: providerKey, model: "fixture", custom: "on" };
+  await save("distil", provider);
+  assert.equal((await store.load()).settings.distil, undefined, "Private provider requires explicit opt-in");
+  await save("distil", { ...provider, privateNetwork: "on" });
+  await readiness("ready", "configured", "configured");
+  const configured = (await store.load()).settings.distil;
+  assert.ok(await store.decrypt("distil", configured.key) === providerKey);
+  await save("distil", { ...provider, endpoint: "", key: "", privateNetwork: "on" });
+  assert.ok(await store.decrypt("distil", (await store.load()).settings.distil.key) === providerKey);
+  await save("distil", { ...provider, endpoint: "https://model-fixture:8443/redirect", privateNetwork: "on" });
+  assert.ok(await store.decrypt("distil.endpoint", (await store.load()).settings.distil.endpoint) === provider.endpoint);
+  await save("skip");
+  await readiness("ready", "configured", "skipped");
+  await save("preferences", { timezone: "Europe/Berlin", speech: "base", uploadMiB: "32", requestsPerMinute: "12" });
+  assert.equal((await store.load()).settings.preferences.timezone, "Europe/Berlin");
+
+  const replacementCookie = sessionFrom(await submit("/login", { password }), "/assistant");
+  assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).headers.get("location"), "/login");
+  assert.equal((await visit("/settings", { headers: { Cookie: replacementCookie } })).status, 200);
   await writeFile(passwordFile, password, { mode: 0o600 });
-  console.log("Clean volume boot, liveness, readiness, guarded routes, claim and session verified.");
+  console.log("Clean boot, claim, origin check, session rotation, database switching, TLS model validation, redirect rejection and manual mode verified.");
 }

@@ -1,16 +1,15 @@
-import { getAdmin } from "@/lib/auth";
+import { readiness } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  let setup: "claimed" | "unclaimed" | "unavailable";
   try {
-    setup = await getAdmin() ? "claimed" : "unclaimed";
+    const state = await readiness();
+    return Response.json(state, { status: state.status === "ready" ? 200 : 503, headers: { "Cache-Control": "no-store" } });
   } catch {
-    setup = "unavailable";
+    return Response.json(
+      { status: "not_ready", setup: "unavailable", database: "unavailable", provider: "unavailable", stage: "unavailable" },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
   }
-  return Response.json(
-    { status: "not_ready", setup, database: "not_configured", provider: "not_configured" },
-    { status: 503, headers: { "Cache-Control": "no-store" } },
-  );
 }

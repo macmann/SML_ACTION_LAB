@@ -8,11 +8,11 @@ export const metadata = { title: "First-run setup" };
 
 export default async function Setup() {
   const state = await accessState();
-  if (state !== "unclaimed") redirect(state === "authenticated" ? "/assistant" : "/login");
+  if (state !== "unclaimed") redirect(state === "authenticated" ? "/" : "/login");
   return (
     <AuthPanel title="Claim this instance">
-      <p className="text-[var(--muted)]">Create the single administrator account. The pairing code is generated on first boot. Read it in the app container terminal.</p>
-      <code className="rounded-md bg-[var(--page)] p-3 text-sm break-all">cat /app/data/config/pairing-code</code>
+      <p className="text-[var(--muted)]">Create the single administrator account. Generate a pairing token in a private app container terminal. It expires after 15 minutes.</p>
+      <code className="rounded-md bg-[var(--page)] p-3 text-sm break-all">node scripts/operator.mjs pair</code>
       <AuthForm setup />
     </AuthPanel>
   );

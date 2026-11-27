@@ -13,7 +13,7 @@ export function AuthForm({ setup = false }: { setup?: boolean }) {
     <form action={action} className="grid gap-4">
       {setup && (
         <label className="grid gap-2 text-sm font-medium">
-          Pairing code
+          Pairing token
           <input name="code" type="password" required autoComplete="off" maxLength={64} className={inputStyle} />
         </label>
       )}

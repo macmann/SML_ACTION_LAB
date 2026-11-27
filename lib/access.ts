@@ -1,11 +1,10 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAdmin, sessionCookie, validSession } from "./auth";
+import { currentAdmin } from "./auth";
+import { store } from "./bootstrap.mjs";
 
 export async function accessState() {
-  const admin = await getAdmin();
-  if (!admin) return "unclaimed";
-  return validSession(admin, (await cookies()).get(sessionCookie)?.value) ? "authenticated" : "claimed";
+  if (!(await store.load()).admin) return "unclaimed";
+  return await currentAdmin() ? "authenticated" : "claimed";
 }
 
 export async function requireAdmin() {

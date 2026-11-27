@@ -19,13 +19,6 @@ export default async function SectionPage({ params }: Props) {
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
       <div className="max-w-2xl rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-7">
         <p className="leading-relaxed text-[var(--muted)]">{description}</p>
-        {section === "settings" && (
-          <dl className="mt-5 grid grid-cols-[1fr_auto] gap-3 border-t border-[var(--line)] pt-5 text-sm">
-            <dt>Administrator</dt><dd>Claimed</dd>
-            <dt>PostgreSQL</dt><dd>Unconfigured</dd>
-            <dt>Model provider</dt><dd>Unconfigured</dd>
-          </dl>
-        )}
       </div>
     </>
   );
