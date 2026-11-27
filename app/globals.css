@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --page: #f4f5f0;
+  --panel: #ffffff;
+  --text: #182622;
+  --muted: #4f6159;
+  --line: #ccd5cc;
+  --accent: #145e4c;
+  --accent-text: #ffffff;
+  --selected: #d9ebe0;
+  --error: #9b292f;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #121a18;
+    --panel: #1b2521;
+    --text: #e4eee8;
+    --muted: #a7bbb0;
+    --line: #42564b;
+    --accent: #a0dec0;
+    --accent-text: #172a20;
+    --selected: #2d453a;
+    --error: #ffadb0;
+  }
+}
+body { background: var(--page); color: var(--text); font-family: system-ui, sans-serif; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
