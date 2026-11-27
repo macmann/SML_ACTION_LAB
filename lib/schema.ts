@@ -159,4 +159,23 @@ CREATE TABLE slm_workspace.invoice_workflows (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 `,
+}, {
+  version: 5,
+  sql: `
+CREATE TABLE slm_workspace.arena_batches (
+  id uuid PRIMARY KEY, request_cap integer NOT NULL CHECK (request_cap BETWEEN 1 AND 8),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE slm_workspace.arena_vendor_metrics (
+  id uuid PRIMARY KEY, variant text NOT NULL CHECK (variant IN ('base','tuned')),
+  source text NOT NULL, samples integer NOT NULL CHECK (samples > 0),
+  correct integer NOT NULL CHECK (correct BETWEEN 0 AND samples),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE slm_workspace.arena_reviews (
+  run_id uuid PRIMARY KEY REFERENCES slm_workspace.benchmark_runs(id),
+  faithfulness integer NOT NULL CHECK (faithfulness BETWEEN 0 AND 3),
+  notes text NOT NULL, reviewed_at timestamptz NOT NULL DEFAULT now()
+);
+`,
 }];

@@ -152,3 +152,26 @@ Headless Chromium verified task creation and editing, note creation, a confirmed
 ### Limits and next phase
 
 Apply migration 4 before using the business pages. Legacy invoice records need verification before they enter outstanding totals. Business lists show up to 200 recent records per type. PDFs use ASCII text and XLSX and CSV remain available for other scripts. No live model or email service was contacted. Later phases can extend pagination, record export filters and accounting integrations. [Business workflows](business-workflows.md)
+
+## Phases 7 and 8 — offline speech and Model Arena
+
+- Added the optional CPU speech image, checksum-verified offline model installation, authenticated recording and WAV playback, and browser transcript review. Speech and Office share one running native job and three waiting slots.
+- Added Model Arena with locked routing cases, a separate generation benchmark and faithfulness review, signed identity classification, separately recorded vendor aggregates, JSON/CSV exports and a confirmed cap of eight provider requests per batch.
+- Added workspace migration 5 and preserved migrations 1–4 and the v1 prompt and tool schema hash. Runtime accepts native tool arguments as a JSON string or object after normalization and validation.
+- Added reproducible Distil candidate exports with 300 training rows and 60 development rows. The separate locked holdout has 100 rows. Controls account for 50, 10 and 20 rows respectively.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run contracts:check`, `npm test` | Passed. 28 tests include real FFmpeg silence decoding, queue limits, cancellation, timeout and temporary-file cleanup, and Arena scoring and attribution. |
+| `npm run training:audit` | Passed. Checks manifest hashes, argument schema, all 460 labels, group separation and lexical leakage. |
+| `docker compose -f compose.yaml -f compose.speech.yaml config --quiet` | Passed. |
+| `COMPOSE_FILE="$PWD/compose.yaml:<temporary-override>" npm run test:integration` | Production build and disposable PostgreSQL and HTTPS fixtures passed. Includes Arena attribution, explicit cap, replay, synthetic execution scoring, generation review, vendor aggregates and exports, and speech diagnostics without models. The Cloud build used an ephemeral CA for npm access. |
+| `docker build --target speech-native -t slm-speech-native:phase78 .` | Passed. Both the Whisper and Piper CLI help commands exited successfully with networking disabled. |
+| `docker build --target speech-runtime -t slm-speech:phase78 .` | Passed using the same temporary npm CA adaptation. |
+| `docker run --rm --network none --cpus 2 --memory 1536m --entrypoint node slm-speech:phase78 scripts/speech-smoke.mjs 1610612736` | The offline FFmpeg fixture generated 94,958 bytes of speech WAV in 119 ms in the run with the updated smoke script bind-mounted. Node process peak was 56,416 KiB, excluding native subprocesses. Cloud did not expose the requested container memory limit through cgroup. The Whisper and Piper model checks skipped. |
+
+### Limits and next phase
+
+Cloud blocked model downloads and access to the Distil documentation endpoints tested. Successful Whisper transcription, Piper voice synthesis, native model latency and memory, and browser microphone permission with installed models remain unverified. Install the verified bundles and run the offline fixture to measure inference on the intended CPU. Vendor config, job description and JSONL format remain candidates until verified against current official Distil documentation and CLI. The overlap audit measures lexical leakage and group separation. It cannot guarantee semantic independence. Routing execution scoring currently covers qualifying synthetic document searches. No training jobs, paid calls or live deployment ran. [Speech setup](speech.md) · [Model Arena and exports](model-arena.md)

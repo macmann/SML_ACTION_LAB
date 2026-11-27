@@ -13,3 +13,9 @@ SLM Action Lab is a single-admin workspace for working with documents and produc
 | Settings | Tests and stores PostgreSQL and provider settings, rotates credentials, and saves processing preferences | Applies those settings to document, speech, and provider workflows |
 
 Navigation adapts to the viewport and supports keyboard access. The workspace follows the operating system's light or dark preference. Pending and rejected authentication submissions provide visible feedback.
+
+### Local speech and Model Arena
+
+The optional speech build records up to 60 seconds in the browser, processes the audio locally, and requires review before text enters the assistant. Read-aloud uses the installed English voice. Typed chat remains available without native tools or model files. [Speech](speech.md)
+
+Model Arena evaluates the versioned ten-action router and two control responses against a locked fictional holdout. A separate generation mode evaluates drafts with human review. The Arena records attribution, failures and denominators and exports results as JSON or CSV. Distil export files remain candidates pending vendor verification. [Model Arena](model-arena.md)

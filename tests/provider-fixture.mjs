@@ -21,6 +21,8 @@ async function complete(req, res) {
   const payload = JSON.parse(input.messages[1].content);
   if (input.messages.length !== 2 || input.messages[1].role !== "user" || input.messages[0].role !== "system") return res.writeHead(400).end();
   if (!input.tools) {
+    if (payload.action === "summary" && payload.source?.includes("Loon Workshop")) return send(res, { model: "fixture",
+      choices: [{ finish_reason: "stop", message: { role: "assistant", content: "Volunteers approved three repair kits. Funding is undecided." } }] });
     if (payload.sections) {
       const section = payload.sections[0];
       return send(res, { model: "fixture", choices: [{ finish_reason: "stop", message: {
@@ -46,6 +48,10 @@ async function complete(req, res) {
     "fixture malicious arguments": [call("search_documents", { query: "QZ-381", path: "/fixture", url: "https://invalid.example" })],
     "fixture unsupported": [call("unsupported_intent", { reason: "That request is outside the profile." })],
     "fixture clarify": [call("clarification_required", { question: "Which source should I use?" })],
+    "Our coordinator needs the archive entry for Velvet Playhouse theater cue book; restrict the lookup to csv.": [{
+      ...call("search_documents", { query: "Velvet Playhouse theater cue book", file_type: "csv" }),
+      function: { name: "search_documents", arguments: { query: "Velvet Playhouse theater cue book", file_type: "csv" } },
+    }],
     "fixture no matches": [call("search_documents", { query: "complete-no-match-fixture" })],
     "fixture search QZ-381": [call("search_documents", { query: "QZ-381" })],
     "fixture ambiguous QZ-381": [call("extract_document_fields", { source_query: "QZ-381", fields: ["invoice_id"] })],
@@ -66,7 +72,7 @@ async function complete(req, res) {
     "fixture mismatch": [task],
   }[request] ?? [call("unsupported_intent", { reason: "Unknown fictional fixture." })];
   const choice = { finish_reason: "tool_calls", message: { role: "assistant", tool_calls: calls } };
-  const response = { model: request === "fixture mismatch" ? "other-model" : "fixture", choices: [choice] };
+  const response = { model: request === "fixture mismatch" ? "other-model" : "fixture", choices: [choice], usage: { total_tokens: 27 } };
   const challenge = req.headers["slm-challenge"];
   const profileId = req.headers["slm-profile"];
   if (challenge && profileId) {

@@ -40,6 +40,12 @@ Apply workspace migrations again after upgrading to Phase 4. Configure Distil in
 
 Strict mutations require a compatible endpoint that signs responses with an operator-pinned key and a separate approval in the Assistant. Unverified endpoints can still perform strict read-only tools. Model-only modes display validated predictions without running tools. See the exact tool definitions, setup requirements, and gateway attestation format. [Agent contract](docs/agent-contract.md)
 
+## Use local speech and Model Arena
+
+Build the optional speech target and install the offline model bundle to enable push-to-talk and WAV read-aloud. Typed chat works in the default image. [Local speech setup](docs/speech.md)
+
+Apply migration 5 before opening Model Arena. Run capped routing comparisons on fictional holdout cases or review generation samples separately. [Arena and dataset guide](docs/model-arena.md)
+
 ## Develop locally
 
 Use Node 24.22.3 and npm from that distribution.

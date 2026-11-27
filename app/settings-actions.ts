@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { currentAdmin, requireSameOrigin } from "@/lib/auth";
 import { store } from "@/lib/bootstrap.mjs";
-import { preferences, roles, settingsFrom } from "@/lib/settings";
+import { preferences, roles, settingsFrom, speechSettings } from "@/lib/settings";
 import { testDatabase, testProvider } from "@/lib/probes";
 import { closeDatabase, databaseLane, migrateWorkspace, WorkspaceError } from "@/lib/database";
 import { importedProfile } from "@/lib/model-profile";
@@ -27,7 +27,12 @@ export async function updateSettings(_previous: string, form: FormData) {
       await migrateWorkspace();
       return "Workspace migrations applied.";
     }
-    if (operation === "profile") {
+    if (operation === "speech") {
+      const speech = speechSettings.safeParse({ enabled: form.get("enabled") === "on", model: value(form, "model"),
+        language: value(form, "language"), maxSeconds: Number(value(form, "maxSeconds")), readAloud: form.get("readAloud") === "on" });
+      if (!speech.success) return "Check the local speech model, language and duration.";
+      settings.speechSettings = speech.data;
+    } else if (operation === "profile") {
       const raw = value(form, "metadata");
       if (!settings.distil || !raw || raw.length > 16_000) return "Enter metadata for the configured Distil model.";
       let profile;

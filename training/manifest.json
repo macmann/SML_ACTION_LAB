@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "schemaVersion": "1.0.0",
+  "schemaHash": "8688419416fc70e0784219a76c8c0cfe87e3129b5e3d977f98f6cbc672997ce4",
+  "vendorCompatibility": "unverified",
+  "counts": {
+    "train": {
+      "rows": 300,
+      "controls": 50,
+      "byTool": {
+        "search_documents": 25,
+        "search_and_summarize": 25,
+        "duplicate_document": 25,
+        "extract_document_fields": 25,
+        "compare_documents": 25,
+        "analyze_spreadsheet": 25,
+        "generate_report": 25,
+        "create_tasks_from_document": 25,
+        "draft_email": 25,
+        "modify_and_convert": 25,
+        "clarification_required": 25,
+        "unsupported_intent": 25
+      }
+    },
+    "test": {
+      "rows": 60,
+      "controls": 10,
+      "byTool": {
+        "search_documents": 5,
+        "search_and_summarize": 5,
+        "duplicate_document": 5,
+        "extract_document_fields": 5,
+        "compare_documents": 5,
+        "analyze_spreadsheet": 5,
+        "generate_report": 5,
+        "create_tasks_from_document": 5,
+        "draft_email": 5,
+        "modify_and_convert": 5,
+        "clarification_required": 5,
+        "unsupported_intent": 5
+      }
+    },
+    "holdout": {
+      "rows": 100,
+      "controls": 20,
+      "byTool": {
+        "search_documents": 8,
+        "search_and_summarize": 8,
+        "duplicate_document": 8,
+        "extract_document_fields": 8,
+        "compare_documents": 8,
+        "analyze_spreadsheet": 8,
+        "generate_report": 8,
+        "create_tasks_from_document": 8,
+        "draft_email": 8,
+        "modify_and_convert": 8,
+        "clarification_required": 10,
+        "unsupported_intent": 10
+      }
+    }
+  },
+  "sha256": {
+    "vendor-candidate/train.jsonl": "46acebbac78919e91b930337b12a56407df456ac17d4d8cd0c8e7b33f5dbf385",
+    "vendor-candidate/test.jsonl": "00311eecde55ac8b3f62beafe22bbc5e6cd2db80f1eaaa0ae4aee069b456808f",
+    "local/holdout.jsonl": "9d8e9b28e4a92a9e0386be7487725f698d8b4b6ee210da8480d1f9702a630ab9",
+    "local/groups.json": "e5f12d9928b431bac9c180f4d0f149879c8f725010cdaadd920de83ed3deb505",
+    "vendor-candidate/config.yaml": "ccbabe9411f41aac898d4ba28e40565807bb8b14f39239572cee9ee79cf6527a",
+    "vendor-candidate/job_description.json": "9510e0854851269983c584ba017fab04ac06fcadef4a88464eea9699cd707c48"
+  }
+}

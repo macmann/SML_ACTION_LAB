@@ -14,6 +14,7 @@ export const importedProfile = z.strictObject({
   schemaVersion: z.literal(schemaVersion),
   schemaHash: z.literal(schemaHash),
   systemPrompt: z.literal(systemPrompt).optional(),
+  variant: z.enum(["base", "tuned"]).optional(),
   origin: z.string().trim().min(1).max(120).optional(),
   revision: z.string().trim().min(1).max(120).optional(),
   checkpointSha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
@@ -43,7 +44,7 @@ export function modelProfile(role: "distil" | "comparison" | "writer", model: st
     sampling: metadata?.sampling ?? { temperature: 0, topP: 1, maxCompletionTokens: role === "writer" ? 768 : 512 },
     thinking: metadata?.thinking ?? "off",
     provenance: metadata ? {
-      origin: metadata.origin, revision: metadata.revision,
+      origin: metadata.origin, variant: metadata.variant, revision: metadata.revision,
       checkpointSha256: metadata.checkpointSha256, attestationPublicKey: metadata.attestationPublicKey,
     } : null,
   };

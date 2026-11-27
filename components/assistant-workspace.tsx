@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { LocalSpeech } from "./local-speech";
 import { Button } from "@/components/ui/button";
 
 type Approval = { id: string; hash: string; version: string; status: string; expiresAt: string;
@@ -78,6 +79,8 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
     finally { lock.current = false; setBusy(false); }
   }
 
+  const draft = result?.result && typeof result.result === "object" && "draft" in result.result ? result.result.draft : undefined;
+  const readText = typeof draft === "string" ? draft : result?.message;
   const available = mode === "comparison" ? comparisonConfigured : routingConfigured;
 
   return <>
@@ -93,6 +96,7 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
       <label className="grid gap-1">Request
         <textarea rows={4} required maxLength={2000} className={input} value={request} onChange={(event) => setRequest(event.target.value)} />
       </label>
+      <LocalSpeech onTranscript={setRequest} readText={readText} />
       <fieldset className="grid gap-2">
         <legend>Active document references</legend>
         {!context?.attachments.length && <p className="text-sm">Select attachments in <Link className="underline" href="/documents">Documents</Link>.</p>}

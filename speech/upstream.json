@@ -1,0 +1,13 @@
+{
+  "whisper": { "tag": "v1.8.3", "commit": "2eeeba56e9edd762b4b38467bab96c2517163158", "license": "MIT" },
+  "piper": {
+    "tag": "2023.11.14-2", "commit": "38917ffd8c0e219c6581d73e07b30ef1d572fce1", "license": "MIT",
+    "linuxX64Sha256": "a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992"
+  },
+  "models": {
+    "ggml-base.bin": { "algorithm": "sha1", "digest": "465707469ff3a37a2b9b8d8f89f2f99de7299dac" },
+    "en_US-lessac-low.onnx": { "algorithm": "md5", "digest": "31883a7506589feadf3c3474fd8ef658", "size": 63201294 },
+    "en_US-lessac-low.onnx.json": { "algorithm": "md5", "digest": "a4c8e9e2a4c5a852b2a1a43089a0b752", "size": 7007 },
+    "MODEL_CARD": { "algorithm": "md5", "digest": "999cbf2c337d8fb2f21b0fa2c95e9e85", "size": 345 }
+  }
+}

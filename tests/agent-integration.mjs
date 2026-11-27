@@ -65,7 +65,7 @@ try {
   assert.deepEqual(await count(), before, "Evaluation mode can only add inference logs");
 
   const metadata = { modelId: "fixture", schemaVersion: "1.0.0", schemaHash: process.env.SLM_TEST_SCHEMA_HASH,
-    origin: "Synthetic signed fixture", checkpointSha256: "b".repeat(64), attestationPublicKey: process.env.SLM_TEST_MODEL_PUBLIC_KEY };
+    origin: "Synthetic signed fixture", variant: "tuned", checkpointSha256: "b".repeat(64), attestationPublicKey: process.env.SLM_TEST_MODEL_PUBLIC_KEY };
   const invalid = await submit("/settings", { metadata: "print('fixture')" }, { cookie: agentCookie, operation: "profile" });
   assert.match(await invalid.text(), /Import a JSON object/);
   await saveSetting("profile", { metadata: JSON.stringify(metadata) });
@@ -297,6 +297,41 @@ try {
   assert.equal((await (await approve(next)).json()).outcome.stage, "completed");
   const followups = await pgClient.query("SELECT count(*)::int AS count FROM slm_workspace.tasks WHERE source_invoice=$1", [copied.outcome.invoiceId]);
   assert.equal(followups.rows[0].count, 1);
+  const speech = await (await visit("/api/speech", { headers: authHeaders })).json();
+  assert.equal(speech.stt, false);
+  assert.equal(speech.tts, false);
+  const invalidAudio = await visit("/api/speech?operation=transcribe", { method: "POST", body: "not audio",
+    headers: { ...authHeaders, "Content-Type": "audio/wav", "Content-Disposition": 'attachment; filename="../../secret.wav"' } });
+  assert.equal(invalidAudio.status, 415);
+  assert.equal((await visit("/api/arena")).status, 401);
+  const arenaInitial = await (await visit("/api/arena", { headers: authHeaders })).json();
+  assert.equal(arenaInitial.routing.length, 100);
+  const batchId = randomUUID();
+  const benchmark = { operation: "run", input: { batchId, mode: "routing",
+    cases: ["holdout-search_documents-1"], roles: ["distil", "comparison"], cap: 2, confirmed: true } };
+  assert.equal((await apiPost("/api/arena", { ...benchmark, input: { ...benchmark.input, confirmed: false } })).status, 400);
+  const scored = await (await apiPost("/api/arena", benchmark)).json();
+  assert.equal(scored.length, 2);
+  assert.equal(scored[0].result.identity, "attested");
+  assert.equal(scored[1].result.identity, "unverified");
+  assert.equal(scored[0].result.exact, true);
+  assert.equal(scored[0].result.fixture, "pass");
+  assert.equal(scored[0].result.usage.total_tokens, 27);
+  assert.equal((await apiPost("/api/arena", benchmark)).status, 409);
+  await apiPost("/api/arena", { operation: "vendor", variant: "base", source: "Fictional vendor report", samples: 60, correct: 30 });
+  const generation = { operation: "run", input: { batchId: randomUUID(), mode: "generation",
+    cases: ["generation-summary-a"], roles: ["distil"], cap: 1, confirmed: true } };
+  const draftRun = (await (await apiPost("/api/arena", generation)).json())[0];
+  assert.match(draftRun.result.draft, /three repair kits/);
+  assert.equal((await apiPost("/api/arena", { operation: "review", id: draftRun.id, faithfulness: 3, notes: "Fictional rubric check" })).status, 200);
+  const scores = await (await visit("/api/arena?export=json", { headers: authHeaders })).json();
+  assert.ok(scores.scores.some((row) => row.key.includes("verified tuned") && !row.key.includes("unverified") && row.total === 1));
+  assert.equal(scores.vendor[0].correct, 30);
+  assert.ok(scores.runs.some((row) => row.id === draftRun.id && row.faithfulness === 3));
+  const csv = await visit("/api/arena?export=csv", { headers: authHeaders });
+  assert.equal(csv.status, 200);
+  assert.match(await csv.text(), /fixture/);
+  console.log("Speech diagnostics and Arena attribution, cap, replay, fixtures, generation review and downloads passed.");
   console.log("Manual CRUD, currency-separated spreadsheet data, typed exports, invoice verification and individually approved workflow passed.");
   console.log("Template preview, immutable original, invoice rollover, unique number, PDFKit draft and missing Office passed.");
   console.log("Agent contracts, all ten tools, identity checks, model-only mode, writer consent, timeouts, approvals, replay and audit passed.");

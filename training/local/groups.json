@@ -1,0 +1,2308 @@
+{
+  "train": [
+    {
+      "id": "train-search_documents-1",
+      "group": "office/search_documents",
+      "text": "Show Aster Quill binder from upload date 2025-01-01 onward."
+    },
+    {
+      "id": "train-search_documents-2",
+      "group": "office/search_documents",
+      "text": "Locate Brindle Finch closing memo in PDF files."
+    },
+    {
+      "id": "train-search_documents-3",
+      "group": "office/search_documents",
+      "text": "Search for Marble Argo dispatch register in TXT files."
+    },
+    {
+      "id": "train-search_documents-4",
+      "group": "office/search_documents",
+      "text": "Show Coral Lantern stock sheet from upload date 2026-04-04 onward."
+    },
+    {
+      "id": "train-search_documents-5",
+      "group": "office/search_documents",
+      "text": "List Ivory Wren supplier packet in DOCX files."
+    },
+    {
+      "id": "train-search_documents-6",
+      "group": "office/search_documents",
+      "text": "Find Aster Quill staff minutes in CSV files."
+    },
+    {
+      "id": "train-search_documents-7",
+      "group": "office/search_documents",
+      "text": "Show Brindle Finch handover log frmo upload date 2025-07-07 onward."
+    },
+    {
+      "id": "train-search_documents-8",
+      "group": "office/search_documents",
+      "text": "Search for Marble Argo remittance in TXT files."
+    },
+    {
+      "id": "train-search_documents-9",
+      "group": "office/search_documents",
+      "text": "Pull up Coral Lantern billing note in XLSX files."
+    },
+    {
+      "id": "train-search_documents-10",
+      "group": "office/search_documents",
+      "text": "Um, dictated request: Show Ivory Wren rate schedule from upload date 2026-10-10 onward."
+    },
+    {
+      "id": "train-search_documents-11",
+      "group": "office/search_documents",
+      "text": "Find Aster Quill project minutes in CSV files."
+    },
+    {
+      "id": "train-search_documents-12",
+      "group": "office/search_documents",
+      "text": "Locate Brindle Finch purchase record in PDF files."
+    },
+    {
+      "id": "train-search_documents-13",
+      "group": "office/search_documents",
+      "text": "Show Marble Argo equipment register from upload date 2025-01-13 onward."
+    },
+    {
+      "id": "train-search_documents-14",
+      "group": "office/search_documents",
+      "text": "Pull up Coral Lantern warehouse ledger in XLSX files."
+    },
+    {
+      "id": "train-search_documents-15",
+      "group": "office/search_documents",
+      "text": "List Ivory Wren rent appendix in DOCX files."
+    },
+    {
+      "id": "train-search_documents-16",
+      "group": "office/search_documents",
+      "text": "Show Aster Quill internal audit from upload date 2026-04-16 onward."
+    },
+    {
+      "id": "train-search_documents-17",
+      "group": "office/search_documents",
+      "text": "Locate Brindle Finch meter statement in PDF files."
+    },
+    {
+      "id": "train-search_documents-18",
+      "group": "office/search_documents",
+      "text": "Search for Marble Argo pickup note in TXT files."
+    },
+    {
+      "id": "train-search_documents-19",
+      "group": "office/search_documents",
+      "text": "Show Coral Lantern client worksheet from upload date 2025-07-19 onward."
+    },
+    {
+      "id": "train-search_documents-20",
+      "group": "office/search_documents",
+      "text": "List Ivory Wren period checklist in DOCX files."
+    },
+    {
+      "id": "train-search_documents-21",
+      "group": "office/search_documents",
+      "text": "Um, dictated request: Find Aster Quill quarter ledger in CSV files."
+    },
+    {
+      "id": "train-search_documents-22",
+      "group": "office/search_documents",
+      "text": "Show Brindle Finch fleet record from upload date 2026-10-22 onward."
+    },
+    {
+      "id": "train-search_documents-23",
+      "group": "office/search_documents",
+      "text": "Search for Marble Argo service form in TXT files."
+    },
+    {
+      "id": "train-search_documents-24",
+      "group": "office/search_documents",
+      "text": "Pull up Coral Lantern invoice copy in XLSX files."
+    },
+    {
+      "id": "train-search_documents-25",
+      "group": "office/search_documents",
+      "text": "Show Ivory Wren route report from upload date 2025-01-25 onward."
+    },
+    {
+      "id": "train-search_and_summarize-1",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Aster Quill binder (brief) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-2",
+      "group": "office/search_and_summarize",
+      "text": "Summarize the selected file (bullets) to check the handoff. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-search_and_summarize-3",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Marble Argo dispatch register (detailed) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-4",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Coral Lantern stock sheet (brief) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-5",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Ivory Wren supplier packet (bullets) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-6",
+      "group": "office/search_and_summarize",
+      "text": "Summarize the selected file (detailed) to check the handoff. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-search_and_summarize-7",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Brindle Finch handover log (brief) to check teh handoff."
+    },
+    {
+      "id": "train-search_and_summarize-8",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Marble Argo remittance (bullets) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-9",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Coral Lantern billing note (detailed) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-10",
+      "group": "office/search_and_summarize",
+      "text": "Um, dictated request: Summarize the selected file (brief) to check the handoff. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-search_and_summarize-11",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Aster Quill project minutes (bullets) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-12",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Brindle Finch purchase record (detailed) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-13",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Marble Argo equipment register (brief) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-14",
+      "group": "office/search_and_summarize",
+      "text": "Summarize teh selected file (bullets) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-15",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Ivory Wren rent appendix (detailed) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-16",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Aster Quill internal audit (brief) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-17",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Brindle Finch meter statement (bullets) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-18",
+      "group": "office/search_and_summarize",
+      "text": "Summarize the selected file (detailed) to check the handoff. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-search_and_summarize-19",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Coral Lantern client worksheet (brief) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-20",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Ivory Wren period checklist (bullets) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-21",
+      "group": "office/search_and_summarize",
+      "text": "Um, dictated request: Summarize Aster Quill quarter ledger (detailed) to check teh handoff."
+    },
+    {
+      "id": "train-search_and_summarize-22",
+      "group": "office/search_and_summarize",
+      "text": "Summarize the selected file (brief) to check the handoff. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-search_and_summarize-23",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Marble Argo service form (bullets) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-24",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Coral Lantern invoice copy (detailed) to check the handoff."
+    },
+    {
+      "id": "train-search_and_summarize-25",
+      "group": "office/search_and_summarize",
+      "text": "Summarize Ivory Wren route report (brief) to check the handoff."
+    },
+    {
+      "id": "train-duplicate_document-1",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Aster Quill binder for 2025-01. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-2",
+      "group": "office/duplicate_document",
+      "text": "Duplicate the selected file for 2026-02. Keep the same customer and amount. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-duplicate_document-3",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Marble Argo dispatch register for 2025-03. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-4",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Coral Lantern stock sheet for 2026-04. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-5",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Ivory Wren supplier packet for 2025-05. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-6",
+      "group": "office/duplicate_document",
+      "text": "Duplicate the selected file for 2026-06. Keep the same customer and amount. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-duplicate_document-7",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Brindle Finch handover log fro 2025-07. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-8",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Marble Argo remittance for 2026-08. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-9",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Coral Lantern billing note for 2025-09. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-10",
+      "group": "office/duplicate_document",
+      "text": "Um, dictated request: Duplicate the selected file for 2026-10. Keep the same customer and amount. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-duplicate_document-11",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Aster Quill project minutes for 2025-11. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-12",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Brindle Finch purchase record for 2026-12. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-13",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Marble Argo equipment register for 2025-01. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-14",
+      "group": "office/duplicate_document",
+      "text": "Duplicate teh selected file for 2026-02. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-15",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Ivory Wren rent appendix for 2025-03. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-16",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Aster Quill internal audit for 2026-04. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-17",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Brindle Finch meter statement for 2025-05. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-18",
+      "group": "office/duplicate_document",
+      "text": "Duplicate the selected file for 2026-06. Keep the same customer and amount. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-duplicate_document-19",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Coral Lantern client worksheet for 2025-07. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-20",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Ivory Wren period checklist for 2026-08. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-21",
+      "group": "office/duplicate_document",
+      "text": "Um, dictated request: Duplicate Aster Quill quarter ledger fro 2025-09. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-22",
+      "group": "office/duplicate_document",
+      "text": "Duplicate the selected file for 2026-10. Keep the same customer and amount. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-duplicate_document-23",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Marble Argo service form for 2025-11. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-24",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Coral Lantern invoice copy for 2026-12. Keep the same customer and amount."
+    },
+    {
+      "id": "train-duplicate_document-25",
+      "group": "office/duplicate_document",
+      "text": "Duplicate Ivory Wren route report for 2025-01. Keep the same customer and amount."
+    },
+    {
+      "id": "train-extract_document_fields-1",
+      "group": "office/extract_document_fields",
+      "text": "Extract invoice id and amount from Aster Quill binder."
+    },
+    {
+      "id": "train-extract_document_fields-2",
+      "group": "office/extract_document_fields",
+      "text": "Extract reference from the selected file. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-extract_document_fields-3",
+      "group": "office/extract_document_fields",
+      "text": "Extract customer and currency from Marble Argo dispatch register."
+    },
+    {
+      "id": "train-extract_document_fields-4",
+      "group": "office/extract_document_fields",
+      "text": "Extract due date and invoice date from Coral Lantern stock sheet."
+    },
+    {
+      "id": "train-extract_document_fields-5",
+      "group": "office/extract_document_fields",
+      "text": "Extract supplier from Ivory Wren supplier packet."
+    },
+    {
+      "id": "train-extract_document_fields-6",
+      "group": "office/extract_document_fields",
+      "text": "Extract invoice id and amount from the selected file. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-extract_document_fields-7",
+      "group": "office/extract_document_fields",
+      "text": "Extract reference frmo Brindle Finch handover log."
+    },
+    {
+      "id": "train-extract_document_fields-8",
+      "group": "office/extract_document_fields",
+      "text": "Extract customer and currency from Marble Argo remittance."
+    },
+    {
+      "id": "train-extract_document_fields-9",
+      "group": "office/extract_document_fields",
+      "text": "Extract due date and invoice date from Coral Lantern billing note."
+    },
+    {
+      "id": "train-extract_document_fields-10",
+      "group": "office/extract_document_fields",
+      "text": "Um, dictated request: Extract supplier from the selected file. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-extract_document_fields-11",
+      "group": "office/extract_document_fields",
+      "text": "Extract invoice id and amount from Aster Quill project minutes."
+    },
+    {
+      "id": "train-extract_document_fields-12",
+      "group": "office/extract_document_fields",
+      "text": "Extract reference from Brindle Finch purchase record."
+    },
+    {
+      "id": "train-extract_document_fields-13",
+      "group": "office/extract_document_fields",
+      "text": "Extract customer and currency from Marble Argo equipment register."
+    },
+    {
+      "id": "train-extract_document_fields-14",
+      "group": "office/extract_document_fields",
+      "text": "Extract due date and invoice date frmo the selected file. This is for the Coral Lantern warehouse ledger briefing."
+    },
+    {
+      "id": "train-extract_document_fields-15",
+      "group": "office/extract_document_fields",
+      "text": "Extract supplier from Ivory Wren rent appendix."
+    },
+    {
+      "id": "train-extract_document_fields-16",
+      "group": "office/extract_document_fields",
+      "text": "Extract invoice id and amount from Aster Quill internal audit."
+    },
+    {
+      "id": "train-extract_document_fields-17",
+      "group": "office/extract_document_fields",
+      "text": "Extract reference from Brindle Finch meter statement."
+    },
+    {
+      "id": "train-extract_document_fields-18",
+      "group": "office/extract_document_fields",
+      "text": "Extract customer and currency from the selected file. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-extract_document_fields-19",
+      "group": "office/extract_document_fields",
+      "text": "Extract due date and invoice date from Coral Lantern client worksheet."
+    },
+    {
+      "id": "train-extract_document_fields-20",
+      "group": "office/extract_document_fields",
+      "text": "Extract supplier from Ivory Wren period checklist."
+    },
+    {
+      "id": "train-extract_document_fields-21",
+      "group": "office/extract_document_fields",
+      "text": "Um, dictated request: Extract invoice id and amount frmo Aster Quill quarter ledger."
+    },
+    {
+      "id": "train-extract_document_fields-22",
+      "group": "office/extract_document_fields",
+      "text": "Extract reference from the selected file. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-extract_document_fields-23",
+      "group": "office/extract_document_fields",
+      "text": "Extract customer and currency from Marble Argo service form."
+    },
+    {
+      "id": "train-extract_document_fields-24",
+      "group": "office/extract_document_fields",
+      "text": "Extract due date and invoice date from Coral Lantern invoice copy."
+    },
+    {
+      "id": "train-extract_document_fields-25",
+      "group": "office/extract_document_fields",
+      "text": "Extract supplier from Ivory Wren route report."
+    },
+    {
+      "id": "train-compare_documents-1",
+      "group": "office/compare_documents",
+      "text": "Compare Aster Quill binder against Aster Quill binder archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-2",
+      "group": "office/compare_documents",
+      "text": "Compare the selected file against Brindle Finch closing memo archive and show differences. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-compare_documents-3",
+      "group": "office/compare_documents",
+      "text": "Compare Marble Argo dispatch register against Marble Argo dispatch register archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-4",
+      "group": "office/compare_documents",
+      "text": "Compare Coral Lantern stock sheet against Coral Lantern stock sheet archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-5",
+      "group": "office/compare_documents",
+      "text": "Compare Ivory Wren supplier packet against Ivory Wren supplier packet archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-6",
+      "group": "office/compare_documents",
+      "text": "Compare the selected file against Aster Quill staff minutes archive and show differences. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-compare_documents-7",
+      "group": "office/compare_documents",
+      "text": "Compare Brindle Finch handover log against Brindle Finch handover log archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-8",
+      "group": "office/compare_documents",
+      "text": "Compare Marble Argo remittance against Marble Argo remittance archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-9",
+      "group": "office/compare_documents",
+      "text": "Compare Coral Lantern billing note against Coral Lantern billing note archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-10",
+      "group": "office/compare_documents",
+      "text": "Um, dictated request: Compare the selected file against Ivory Wren rate schedule archive and show differences. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-compare_documents-11",
+      "group": "office/compare_documents",
+      "text": "Compare Aster Quill project minutes against Aster Quill project minutes archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-12",
+      "group": "office/compare_documents",
+      "text": "Compare Brindle Finch purchase record against Brindle Finch purchase record archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-13",
+      "group": "office/compare_documents",
+      "text": "Compare Marble Argo equipment register against Marble Argo equipment register archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-14",
+      "group": "office/compare_documents",
+      "text": "Compare teh selected file against Coral Lantern warehouse ledger archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-15",
+      "group": "office/compare_documents",
+      "text": "Compare Ivory Wren rent appendix against Ivory Wren rent appendix archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-16",
+      "group": "office/compare_documents",
+      "text": "Compare Aster Quill internal audit against Aster Quill internal audit archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-17",
+      "group": "office/compare_documents",
+      "text": "Compare Brindle Finch meter statement against Brindle Finch meter statement archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-18",
+      "group": "office/compare_documents",
+      "text": "Compare the selected file against Marble Argo pickup note archive and show differences. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-compare_documents-19",
+      "group": "office/compare_documents",
+      "text": "Compare Coral Lantern client worksheet against Coral Lantern client worksheet archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-20",
+      "group": "office/compare_documents",
+      "text": "Compare Ivory Wren period checklist against Ivory Wren period checklist archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-21",
+      "group": "office/compare_documents",
+      "text": "Um, dictated request: Compare Aster Quill quarter ledger against Aster Quill quarter ledger archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-22",
+      "group": "office/compare_documents",
+      "text": "Compare the selected file against Brindle Finch fleet record archive and show differences. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-compare_documents-23",
+      "group": "office/compare_documents",
+      "text": "Compare Marble Argo service form against Marble Argo service form archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-24",
+      "group": "office/compare_documents",
+      "text": "Compare Coral Lantern invoice copy against Coral Lantern invoice copy archive and show differences."
+    },
+    {
+      "id": "train-compare_documents-25",
+      "group": "office/compare_documents",
+      "text": "Compare Ivory Wren route report against Ivory Wren route report archive and show differences."
+    },
+    {
+      "id": "train-analyze_spreadsheet-1",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the sum of Units in Aster Quill binder."
+    },
+    {
+      "id": "train-analyze_spreadsheet-2",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the count of Units in the selected file, grouped by Team. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-analyze_spreadsheet-3",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the average of Units in Marble Argo dispatch register."
+    },
+    {
+      "id": "train-analyze_spreadsheet-4",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the min of Units in Coral Lantern stock sheet, grouped by Team."
+    },
+    {
+      "id": "train-analyze_spreadsheet-5",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the max of Units in Ivory Wren supplier packet."
+    },
+    {
+      "id": "train-analyze_spreadsheet-6",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the sum of Units in the selected file, grouped by Team. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-analyze_spreadsheet-7",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute teh count of Units in Brindle Finch handover log."
+    },
+    {
+      "id": "train-analyze_spreadsheet-8",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the average of Units in Marble Argo remittance, grouped by Team."
+    },
+    {
+      "id": "train-analyze_spreadsheet-9",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the min of Units in Coral Lantern billing note."
+    },
+    {
+      "id": "train-analyze_spreadsheet-10",
+      "group": "office/analyze_spreadsheet",
+      "text": "Um, dictated request: Compute the max of Units in the selected file, grouped by Team. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-analyze_spreadsheet-11",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the sum of Units in Aster Quill project minutes."
+    },
+    {
+      "id": "train-analyze_spreadsheet-12",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the count of Units in Brindle Finch purchase record, grouped by Team."
+    },
+    {
+      "id": "train-analyze_spreadsheet-13",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the average of Units in Marble Argo equipment register."
+    },
+    {
+      "id": "train-analyze_spreadsheet-14",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute teh min of Units in the selected file, grouped by Team. This is for the Coral Lantern warehouse ledger briefing."
+    },
+    {
+      "id": "train-analyze_spreadsheet-15",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the max of Units in Ivory Wren rent appendix."
+    },
+    {
+      "id": "train-analyze_spreadsheet-16",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the sum of Units in Aster Quill internal audit, grouped by Team."
+    },
+    {
+      "id": "train-analyze_spreadsheet-17",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the count of Units in Brindle Finch meter statement."
+    },
+    {
+      "id": "train-analyze_spreadsheet-18",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the average of Units in the selected file, grouped by Team. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-analyze_spreadsheet-19",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the min of Units in Coral Lantern client worksheet."
+    },
+    {
+      "id": "train-analyze_spreadsheet-20",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the max of Units in Ivory Wren period checklist, grouped by Team."
+    },
+    {
+      "id": "train-analyze_spreadsheet-21",
+      "group": "office/analyze_spreadsheet",
+      "text": "Um, dictated request: Compute teh sum of Units in Aster Quill quarter ledger."
+    },
+    {
+      "id": "train-analyze_spreadsheet-22",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the count of Units in the selected file, grouped by Team. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-analyze_spreadsheet-23",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the average of Units in Marble Argo service form."
+    },
+    {
+      "id": "train-analyze_spreadsheet-24",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the min of Units in Coral Lantern invoice copy, grouped by Team."
+    },
+    {
+      "id": "train-analyze_spreadsheet-25",
+      "group": "office/analyze_spreadsheet",
+      "text": "Compute the max of Units in Ivory Wren route report."
+    },
+    {
+      "id": "train-generate_report-1",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of csv files. For Aster Quill briefing. The result is for our Aster Quill binder meeting."
+    },
+    {
+      "id": "train-generate_report-2",
+      "group": "office/generate_report",
+      "text": "Generate a status report for open tasks. Use the local workspace. The result is for our Brindle Finch closing memo meeting."
+    },
+    {
+      "id": "train-generate_report-3",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of txt files. For the internal check. The result is for our Marble Argo dispatch register meeting."
+    },
+    {
+      "id": "train-generate_report-4",
+      "group": "office/generate_report",
+      "text": "Generate a status report for done tasks. For Coral Lantern briefing. The result is for our Coral Lantern stock sheet meeting."
+    },
+    {
+      "id": "train-generate_report-5",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of docx files. Use the local workspace. The result is for our Ivory Wren supplier packet meeting."
+    },
+    {
+      "id": "train-generate_report-6",
+      "group": "office/generate_report",
+      "text": "Generate a status report for open tasks. For the internal check. The result is for our Aster Quill staff minutes meeting."
+    },
+    {
+      "id": "train-generate_report-7",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of pdf files. fro Brindle Finch briefing. The result is for our Brindle Finch handover log meeting."
+    },
+    {
+      "id": "train-generate_report-8",
+      "group": "office/generate_report",
+      "text": "Generate a status report for done tasks. Use the local workspace. The result is for our Marble Argo remittance meeting."
+    },
+    {
+      "id": "train-generate_report-9",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of xlsx files. For the internal check. The result is for our Coral Lantern billing note meeting."
+    },
+    {
+      "id": "train-generate_report-10",
+      "group": "office/generate_report",
+      "text": "Um, dictated request: Generate a status report for open tasks. For Ivory Wren briefing. The result is for our Ivory Wren rate schedule meeting."
+    },
+    {
+      "id": "train-generate_report-11",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of csv files. Use the local workspace. The result is for our Aster Quill project minutes meeting."
+    },
+    {
+      "id": "train-generate_report-12",
+      "group": "office/generate_report",
+      "text": "Generate a status report for done tasks. For the internal check. The result is for our Brindle Finch purchase record meeting."
+    },
+    {
+      "id": "train-generate_report-13",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of txt files. For Marble Argo briefing. The result is for our Marble Argo equipment register meeting."
+    },
+    {
+      "id": "train-generate_report-14",
+      "group": "office/generate_report",
+      "text": "Generate a status report fro open tasks. Use the local workspace. The result is for our Coral Lantern warehouse ledger meeting."
+    },
+    {
+      "id": "train-generate_report-15",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of docx files. For the internal check. The result is for our Ivory Wren rent appendix meeting."
+    },
+    {
+      "id": "train-generate_report-16",
+      "group": "office/generate_report",
+      "text": "Generate a status report for done tasks. For Aster Quill briefing. The result is for our Aster Quill internal audit meeting."
+    },
+    {
+      "id": "train-generate_report-17",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of pdf files. Use the local workspace. The result is for our Brindle Finch meter statement meeting."
+    },
+    {
+      "id": "train-generate_report-18",
+      "group": "office/generate_report",
+      "text": "Generate a status report for open tasks. For the internal check. The result is for our Marble Argo pickup note meeting."
+    },
+    {
+      "id": "train-generate_report-19",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of xlsx files. For Coral Lantern briefing. The result is for our Coral Lantern client worksheet meeting."
+    },
+    {
+      "id": "train-generate_report-20",
+      "group": "office/generate_report",
+      "text": "Generate a status report for done tasks. Use the local workspace. The result is for our Ivory Wren period checklist meeting."
+    },
+    {
+      "id": "train-generate_report-21",
+      "group": "office/generate_report",
+      "text": "Um, dictated request: Generate a document inventory of csv files. fro the internal check. The result is for our Aster Quill quarter ledger meeting."
+    },
+    {
+      "id": "train-generate_report-22",
+      "group": "office/generate_report",
+      "text": "Generate a status report for open tasks. For Brindle Finch briefing. The result is for our Brindle Finch fleet record meeting."
+    },
+    {
+      "id": "train-generate_report-23",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of txt files. Use the local workspace. The result is for our Marble Argo service form meeting."
+    },
+    {
+      "id": "train-generate_report-24",
+      "group": "office/generate_report",
+      "text": "Generate a status report for done tasks. For the internal check. The result is for our Coral Lantern invoice copy meeting."
+    },
+    {
+      "id": "train-generate_report-25",
+      "group": "office/generate_report",
+      "text": "Generate a document inventory of docx files. For Ivory Wren briefing. The result is for our Ivory Wren route report meeting."
+    },
+    {
+      "id": "train-create_tasks_from_document-1",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Aster Quill binder."
+    },
+    {
+      "id": "train-create_tasks_from_document-2",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in the selected file. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-create_tasks_from_document-3",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Marble Argo dispatch register."
+    },
+    {
+      "id": "train-create_tasks_from_document-4",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Coral Lantern stock sheet."
+    },
+    {
+      "id": "train-create_tasks_from_document-5",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Ivory Wren supplier packet."
+    },
+    {
+      "id": "train-create_tasks_from_document-6",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in the selected file. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-create_tasks_from_document-7",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks frmo explicit TODO lines in Brindle Finch handover log."
+    },
+    {
+      "id": "train-create_tasks_from_document-8",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Marble Argo remittance."
+    },
+    {
+      "id": "train-create_tasks_from_document-9",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Coral Lantern billing note."
+    },
+    {
+      "id": "train-create_tasks_from_document-10",
+      "group": "office/create_tasks_from_document",
+      "text": "Um, dictated request: Propose tasks from explicit TODO lines in the selected file. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-create_tasks_from_document-11",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Aster Quill project minutes."
+    },
+    {
+      "id": "train-create_tasks_from_document-12",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Brindle Finch purchase record."
+    },
+    {
+      "id": "train-create_tasks_from_document-13",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Marble Argo equipment register."
+    },
+    {
+      "id": "train-create_tasks_from_document-14",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks frmo explicit TODO lines in the selected file. This is for the Coral Lantern warehouse ledger briefing."
+    },
+    {
+      "id": "train-create_tasks_from_document-15",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Ivory Wren rent appendix."
+    },
+    {
+      "id": "train-create_tasks_from_document-16",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Aster Quill internal audit."
+    },
+    {
+      "id": "train-create_tasks_from_document-17",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Brindle Finch meter statement."
+    },
+    {
+      "id": "train-create_tasks_from_document-18",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in the selected file. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-create_tasks_from_document-19",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Coral Lantern client worksheet."
+    },
+    {
+      "id": "train-create_tasks_from_document-20",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Ivory Wren period checklist."
+    },
+    {
+      "id": "train-create_tasks_from_document-21",
+      "group": "office/create_tasks_from_document",
+      "text": "Um, dictated request: Propose tasks frmo explicit TODO lines in Aster Quill quarter ledger."
+    },
+    {
+      "id": "train-create_tasks_from_document-22",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in the selected file. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-create_tasks_from_document-23",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Marble Argo service form."
+    },
+    {
+      "id": "train-create_tasks_from_document-24",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Coral Lantern invoice copy."
+    },
+    {
+      "id": "train-create_tasks_from_document-25",
+      "group": "office/create_tasks_from_document",
+      "text": "Propose tasks from explicit TODO lines in Ivory Wren route report."
+    },
+    {
+      "id": "train-draft_email-1",
+      "group": "office/draft_email",
+      "text": "Using Aster Quill binder, draft a neutral email to confirm receipt."
+    },
+    {
+      "id": "train-draft_email-2",
+      "group": "office/draft_email",
+      "text": "Using the selected file, draft a formal email to request a correction. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-draft_email-3",
+      "group": "office/draft_email",
+      "text": "Using Marble Argo dispatch register, draft a friendly email to thank the supplier."
+    },
+    {
+      "id": "train-draft_email-4",
+      "group": "office/draft_email",
+      "text": "Using Coral Lantern stock sheet, draft a neutral email to ask for an update."
+    },
+    {
+      "id": "train-draft_email-5",
+      "group": "office/draft_email",
+      "text": "Using Ivory Wren supplier packet, draft a formal email to request supporting details."
+    },
+    {
+      "id": "train-draft_email-6",
+      "group": "office/draft_email",
+      "text": "Using the selected file, draft a friendly email to confirm receipt. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-draft_email-7",
+      "group": "office/draft_email",
+      "text": "Using Brindle Finch handover log, draft a neutral email to request a correction."
+    },
+    {
+      "id": "train-draft_email-8",
+      "group": "office/draft_email",
+      "text": "Using Marble Argo remittance, draft a formal email to thank the supplier."
+    },
+    {
+      "id": "train-draft_email-9",
+      "group": "office/draft_email",
+      "text": "Using Coral Lantern billing note, draft a friendly email to ask for an update."
+    },
+    {
+      "id": "train-draft_email-10",
+      "group": "office/draft_email",
+      "text": "Um, dictated request: Using the selected file, draft a neutral email to request supporting details. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-draft_email-11",
+      "group": "office/draft_email",
+      "text": "Using Aster Quill project minutes, draft a formal email to confirm receipt."
+    },
+    {
+      "id": "train-draft_email-12",
+      "group": "office/draft_email",
+      "text": "Using Brindle Finch purchase record, draft a friendly email to request a correction."
+    },
+    {
+      "id": "train-draft_email-13",
+      "group": "office/draft_email",
+      "text": "Using Marble Argo equipment register, draft a neutral email to thank the supplier."
+    },
+    {
+      "id": "train-draft_email-14",
+      "group": "office/draft_email",
+      "text": "Using teh selected file, draft a formal email to ask for an update."
+    },
+    {
+      "id": "train-draft_email-15",
+      "group": "office/draft_email",
+      "text": "Using Ivory Wren rent appendix, draft a friendly email to request supporting details."
+    },
+    {
+      "id": "train-draft_email-16",
+      "group": "office/draft_email",
+      "text": "Using Aster Quill internal audit, draft a neutral email to confirm receipt."
+    },
+    {
+      "id": "train-draft_email-17",
+      "group": "office/draft_email",
+      "text": "Using Brindle Finch meter statement, draft a formal email to request a correction."
+    },
+    {
+      "id": "train-draft_email-18",
+      "group": "office/draft_email",
+      "text": "Using the selected file, draft a friendly email to thank the supplier. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-draft_email-19",
+      "group": "office/draft_email",
+      "text": "Using Coral Lantern client worksheet, draft a neutral email to ask for an update."
+    },
+    {
+      "id": "train-draft_email-20",
+      "group": "office/draft_email",
+      "text": "Using Ivory Wren period checklist, draft a formal email to request supporting details."
+    },
+    {
+      "id": "train-draft_email-21",
+      "group": "office/draft_email",
+      "text": "Um, dictated request: Using Aster Quill quarter ledger, draft a friendly email to confirm receipt."
+    },
+    {
+      "id": "train-draft_email-22",
+      "group": "office/draft_email",
+      "text": "Using the selected file, draft a neutral email to request a correction. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-draft_email-23",
+      "group": "office/draft_email",
+      "text": "Using Marble Argo service form, draft a formal email to thank the supplier."
+    },
+    {
+      "id": "train-draft_email-24",
+      "group": "office/draft_email",
+      "text": "Using Coral Lantern invoice copy, draft a friendly email to ask for an update."
+    },
+    {
+      "id": "train-draft_email-25",
+      "group": "office/draft_email",
+      "text": "Using Ivory Wren route report, draft a neutral email to request supporting details."
+    },
+    {
+      "id": "train-modify_and_convert-1",
+      "group": "office/modify_and_convert",
+      "text": "In Aster Quill binder, replace \"Old marker binder\" with \"New marker binder\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-2",
+      "group": "office/modify_and_convert",
+      "text": "In the selected file, replace \"Old marker closing memo\" with \"New marker closing memo\" and make pdf. This is for the Brindle Finch closing memo briefing."
+    },
+    {
+      "id": "train-modify_and_convert-3",
+      "group": "office/modify_and_convert",
+      "text": "In Marble Argo dispatch register, replace \"Old marker dispatch register\" with \"New marker dispatch register\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-4",
+      "group": "office/modify_and_convert",
+      "text": "In Coral Lantern stock sheet, replace \"Old marker stock sheet\" with \"New marker stock sheet\" and make pdf."
+    },
+    {
+      "id": "train-modify_and_convert-5",
+      "group": "office/modify_and_convert",
+      "text": "In Ivory Wren supplier packet, replace \"Old marker supplier packet\" with \"New marker supplier packet\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-6",
+      "group": "office/modify_and_convert",
+      "text": "In the selected file, replace \"Old marker staff minutes\" with \"New marker staff minutes\" and make pdf. This is for the Aster Quill staff minutes briefing."
+    },
+    {
+      "id": "train-modify_and_convert-7",
+      "group": "office/modify_and_convert",
+      "text": "In Brindle Finch handover log, replace \"Old marker handover log\" with \"New marker handover log\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-8",
+      "group": "office/modify_and_convert",
+      "text": "In Marble Argo remittance, replace \"Old marker remittance\" with \"New marker remittance\" and make pdf."
+    },
+    {
+      "id": "train-modify_and_convert-9",
+      "group": "office/modify_and_convert",
+      "text": "In Coral Lantern billing note, replace \"Old marker billing note\" with \"New marker billing note\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-10",
+      "group": "office/modify_and_convert",
+      "text": "Um, dictated request: In the selected file, replace \"Old marker rate schedule\" with \"New marker rate schedule\" and make pdf. This is for the Ivory Wren rate schedule briefing."
+    },
+    {
+      "id": "train-modify_and_convert-11",
+      "group": "office/modify_and_convert",
+      "text": "In Aster Quill project minutes, replace \"Old marker project minutes\" with \"New marker project minutes\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-12",
+      "group": "office/modify_and_convert",
+      "text": "In Brindle Finch purchase record, replace \"Old marker purchase record\" with \"New marker purchase record\" and make pdf."
+    },
+    {
+      "id": "train-modify_and_convert-13",
+      "group": "office/modify_and_convert",
+      "text": "In Marble Argo equipment register, replace \"Old marker equipment register\" with \"New marker equipment register\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-14",
+      "group": "office/modify_and_convert",
+      "text": "In teh selected file, replace \"Old marker warehouse ledger\" with \"New marker warehouse ledger\" and make pdf."
+    },
+    {
+      "id": "train-modify_and_convert-15",
+      "group": "office/modify_and_convert",
+      "text": "In Ivory Wren rent appendix, replace \"Old marker rent appendix\" with \"New marker rent appendix\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-16",
+      "group": "office/modify_and_convert",
+      "text": "In Aster Quill internal audit, replace \"Old marker internal audit\" with \"New marker internal audit\" and make pdf."
+    },
+    {
+      "id": "train-modify_and_convert-17",
+      "group": "office/modify_and_convert",
+      "text": "In Brindle Finch meter statement, replace \"Old marker meter statement\" with \"New marker meter statement\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-18",
+      "group": "office/modify_and_convert",
+      "text": "In the selected file, replace \"Old marker pickup note\" with \"New marker pickup note\" and make pdf. This is for the Marble Argo pickup note briefing."
+    },
+    {
+      "id": "train-modify_and_convert-19",
+      "group": "office/modify_and_convert",
+      "text": "In Coral Lantern client worksheet, replace \"Old marker client worksheet\" with \"New marker client worksheet\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-20",
+      "group": "office/modify_and_convert",
+      "text": "In Ivory Wren period checklist, replace \"Old marker period checklist\" with \"New marker period checklist\" and make pdf."
+    },
+    {
+      "id": "train-modify_and_convert-21",
+      "group": "office/modify_and_convert",
+      "text": "Um, dictated request: In Aster Quill quarter ledger, replace \"Old marker quarter ledger\" with \"New marker quarter ledger\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-22",
+      "group": "office/modify_and_convert",
+      "text": "In the selected file, replace \"Old marker fleet record\" with \"New marker fleet record\" and make pdf. This is for the Brindle Finch fleet record briefing."
+    },
+    {
+      "id": "train-modify_and_convert-23",
+      "group": "office/modify_and_convert",
+      "text": "In Marble Argo service form, replace \"Old marker service form\" with \"New marker service form\" and make txt."
+    },
+    {
+      "id": "train-modify_and_convert-24",
+      "group": "office/modify_and_convert",
+      "text": "In Coral Lantern invoice copy, replace \"Old marker invoice copy\" with \"New marker invoice copy\" and make pdf."
+    },
+    {
+      "id": "train-modify_and_convert-25",
+      "group": "office/modify_and_convert",
+      "text": "In Ivory Wren route report, replace \"Old marker route report\" with \"New marker route report\" and make txt."
+    },
+    {
+      "id": "train-clarification_required-1",
+      "group": "office/clarification_required",
+      "text": "Duplicate the binder Aster Quill binder for next month, preserving customer and amount."
+    },
+    {
+      "id": "train-clarification_required-2",
+      "group": "office/clarification_required",
+      "text": "Find Brindle Finch closing memo from the old date."
+    },
+    {
+      "id": "train-clarification_required-3",
+      "group": "office/clarification_required",
+      "text": "Compare Marble Argo dispatch register with that other thing."
+    },
+    {
+      "id": "train-clarification_required-4",
+      "group": "office/clarification_required",
+      "text": "Replace some label in Coral Lantern stock sheet and give me a PDF."
+    },
+    {
+      "id": "train-clarification_required-5",
+      "group": "office/clarification_required",
+      "text": "Sum the spreadsheet Ivory Wren supplier packet."
+    },
+    {
+      "id": "train-clarification_required-6",
+      "group": "office/clarification_required",
+      "text": "Duplicate the binder Aster Quill staff minutes for next month, preserving customer and amount."
+    },
+    {
+      "id": "train-clarification_required-7",
+      "group": "office/clarification_required",
+      "text": "Find Brindle Finch handover log frmo the old date."
+    },
+    {
+      "id": "train-clarification_required-8",
+      "group": "office/clarification_required",
+      "text": "Compare Marble Argo remittance with that other thing."
+    },
+    {
+      "id": "train-clarification_required-9",
+      "group": "office/clarification_required",
+      "text": "Replace some label in Coral Lantern billing note and give me a PDF."
+    },
+    {
+      "id": "train-clarification_required-10",
+      "group": "office/clarification_required",
+      "text": "Um, dictated request: Sum the spreadsheet Ivory Wren rate schedule."
+    },
+    {
+      "id": "train-clarification_required-11",
+      "group": "office/clarification_required",
+      "text": "Duplicate the binder Aster Quill project minutes for next month, preserving customer and amount."
+    },
+    {
+      "id": "train-clarification_required-12",
+      "group": "office/clarification_required",
+      "text": "Find Brindle Finch purchase record from the old date."
+    },
+    {
+      "id": "train-clarification_required-13",
+      "group": "office/clarification_required",
+      "text": "Compare Marble Argo equipment register with that other thing."
+    },
+    {
+      "id": "train-clarification_required-14",
+      "group": "office/clarification_required",
+      "text": "Replace some label in Coral Lantern warehouse ledger and give me a PDF."
+    },
+    {
+      "id": "train-clarification_required-15",
+      "group": "office/clarification_required",
+      "text": "Sum the spreadsheet Ivory Wren rent appendix."
+    },
+    {
+      "id": "train-clarification_required-16",
+      "group": "office/clarification_required",
+      "text": "Duplicate the binder Aster Quill internal audit for next month, preserving customer and amount."
+    },
+    {
+      "id": "train-clarification_required-17",
+      "group": "office/clarification_required",
+      "text": "Find Brindle Finch meter statement from the old date."
+    },
+    {
+      "id": "train-clarification_required-18",
+      "group": "office/clarification_required",
+      "text": "Compare Marble Argo pickup note with that other thing."
+    },
+    {
+      "id": "train-clarification_required-19",
+      "group": "office/clarification_required",
+      "text": "Replace some label in Coral Lantern client worksheet and give me a PDF."
+    },
+    {
+      "id": "train-clarification_required-20",
+      "group": "office/clarification_required",
+      "text": "Sum the spreadsheet Ivory Wren period checklist."
+    },
+    {
+      "id": "train-clarification_required-21",
+      "group": "office/clarification_required",
+      "text": "Um, dictated request: Duplicate teh binder Aster Quill quarter ledger for next month, preserving customer and amount."
+    },
+    {
+      "id": "train-clarification_required-22",
+      "group": "office/clarification_required",
+      "text": "Find Brindle Finch fleet record from the old date."
+    },
+    {
+      "id": "train-clarification_required-23",
+      "group": "office/clarification_required",
+      "text": "Compare Marble Argo service form with that other thing."
+    },
+    {
+      "id": "train-clarification_required-24",
+      "group": "office/clarification_required",
+      "text": "Replace some label in Coral Lantern invoice copy and give me a PDF."
+    },
+    {
+      "id": "train-clarification_required-25",
+      "group": "office/clarification_required",
+      "text": "Sum the spreadsheet Ivory Wren route report."
+    },
+    {
+      "id": "train-unsupported_intent-1",
+      "group": "office/unsupported_intent",
+      "text": "Transmit a payment for Aster Quill binder."
+    },
+    {
+      "id": "train-unsupported_intent-2",
+      "group": "office/unsupported_intent",
+      "text": "Send a real email to the supplier about Brindle Finch closing memo."
+    },
+    {
+      "id": "train-unsupported_intent-3",
+      "group": "office/unsupported_intent",
+      "text": "Permanently erase historical records linked to Marble Argo dispatch register."
+    },
+    {
+      "id": "train-unsupported_intent-4",
+      "group": "office/unsupported_intent",
+      "text": "Deploy the web service associated with Coral Lantern stock sheet."
+    },
+    {
+      "id": "train-unsupported_intent-5",
+      "group": "office/unsupported_intent",
+      "text": "Put Ivory Wren supplier packet into a shared cloud folder."
+    },
+    {
+      "id": "train-unsupported_intent-6",
+      "group": "office/unsupported_intent",
+      "text": "Transmit a payment for Aster Quill staff minutes."
+    },
+    {
+      "id": "train-unsupported_intent-7",
+      "group": "office/unsupported_intent",
+      "text": "Send a real email to teh supplier about Brindle Finch handover log."
+    },
+    {
+      "id": "train-unsupported_intent-8",
+      "group": "office/unsupported_intent",
+      "text": "Permanently erase historical records linked to Marble Argo remittance."
+    },
+    {
+      "id": "train-unsupported_intent-9",
+      "group": "office/unsupported_intent",
+      "text": "Deploy the web service associated with Coral Lantern billing note."
+    },
+    {
+      "id": "train-unsupported_intent-10",
+      "group": "office/unsupported_intent",
+      "text": "Um, dictated request: Put Ivory Wren rate schedule into a shared cloud folder."
+    },
+    {
+      "id": "train-unsupported_intent-11",
+      "group": "office/unsupported_intent",
+      "text": "Transmit a payment for Aster Quill project minutes."
+    },
+    {
+      "id": "train-unsupported_intent-12",
+      "group": "office/unsupported_intent",
+      "text": "Send a real email to the supplier about Brindle Finch purchase record."
+    },
+    {
+      "id": "train-unsupported_intent-13",
+      "group": "office/unsupported_intent",
+      "text": "Permanently erase historical records linked to Marble Argo equipment register."
+    },
+    {
+      "id": "train-unsupported_intent-14",
+      "group": "office/unsupported_intent",
+      "text": "Deploy teh web service associated with Coral Lantern warehouse ledger."
+    },
+    {
+      "id": "train-unsupported_intent-15",
+      "group": "office/unsupported_intent",
+      "text": "Put Ivory Wren rent appendix into a shared cloud folder."
+    },
+    {
+      "id": "train-unsupported_intent-16",
+      "group": "office/unsupported_intent",
+      "text": "Transmit a payment for Aster Quill internal audit."
+    },
+    {
+      "id": "train-unsupported_intent-17",
+      "group": "office/unsupported_intent",
+      "text": "Send a real email to the supplier about Brindle Finch meter statement."
+    },
+    {
+      "id": "train-unsupported_intent-18",
+      "group": "office/unsupported_intent",
+      "text": "Permanently erase historical records linked to Marble Argo pickup note."
+    },
+    {
+      "id": "train-unsupported_intent-19",
+      "group": "office/unsupported_intent",
+      "text": "Deploy the web service associated with Coral Lantern client worksheet."
+    },
+    {
+      "id": "train-unsupported_intent-20",
+      "group": "office/unsupported_intent",
+      "text": "Put Ivory Wren period checklist into a shared cloud folder."
+    },
+    {
+      "id": "train-unsupported_intent-21",
+      "group": "office/unsupported_intent",
+      "text": "Um, dictated request: Transmit a payment fro Aster Quill quarter ledger."
+    },
+    {
+      "id": "train-unsupported_intent-22",
+      "group": "office/unsupported_intent",
+      "text": "Send a real email to the supplier about Brindle Finch fleet record."
+    },
+    {
+      "id": "train-unsupported_intent-23",
+      "group": "office/unsupported_intent",
+      "text": "Permanently erase historical records linked to Marble Argo service form."
+    },
+    {
+      "id": "train-unsupported_intent-24",
+      "group": "office/unsupported_intent",
+      "text": "Deploy the web service associated with Coral Lantern invoice copy."
+    },
+    {
+      "id": "train-unsupported_intent-25",
+      "group": "office/unsupported_intent",
+      "text": "Put Ivory Wren route report into a shared cloud folder."
+    }
+  ],
+  "test": [
+    {
+      "id": "test-search_documents-1",
+      "group": "field/search_documents",
+      "text": "For the site review, identify csv results tied to Jasper Observatory drone manifest."
+    },
+    {
+      "id": "test-search_documents-2",
+      "group": "field/search_documents",
+      "text": "For the site review, identify pdf results tied to Zephyr Hothouse observatory tally."
+    },
+    {
+      "id": "test-search_documents-3",
+      "group": "field/search_documents",
+      "text": "For the site review, identify txt results tied to Nimbus Trail greenhouse log."
+    },
+    {
+      "id": "test-search_documents-4",
+      "group": "field/search_documents",
+      "text": "For the site review, identify xlsx results tied to Jasper Observatory trail survey."
+    },
+    {
+      "id": "test-search_documents-5",
+      "group": "field/search_documents",
+      "text": "For the site review, identify docx results tied to Zephyr Hothouse telescope checklist."
+    },
+    {
+      "id": "test-search_and_summarize-1",
+      "group": "field/search_and_summarize",
+      "text": "I missed the inspection. Give a brief summary of Jasper Observatory drone manifest for a site briefing."
+    },
+    {
+      "id": "test-search_and_summarize-2",
+      "group": "field/search_and_summarize",
+      "text": "I missed the inspection. Give a bullets summary of the selected file for a site briefing. This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-search_and_summarize-3",
+      "group": "field/search_and_summarize",
+      "text": "I missed the inspection. Give a detailed summary of Nimbus Trail greenhouse log for a site briefing."
+    },
+    {
+      "id": "test-search_and_summarize-4",
+      "group": "field/search_and_summarize",
+      "text": "I missed the inspection. Give a brief summary of Jasper Observatory trail survey for a site briefing."
+    },
+    {
+      "id": "test-search_and_summarize-5",
+      "group": "field/search_and_summarize",
+      "text": "I missed the inspection. Give a bullets summary of Zephyr Hothouse telescope checklist for a site briefing."
+    },
+    {
+      "id": "test-duplicate_document-1",
+      "group": "field/duplicate_document",
+      "text": "Make a second draft from Jasper Observatory drone manifest for period 2027-01; carry over amount and customer unchanged."
+    },
+    {
+      "id": "test-duplicate_document-2",
+      "group": "field/duplicate_document",
+      "text": "Make a second draft from the selected file for period 2028-02; carry over amount and customer unchanged. This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-duplicate_document-3",
+      "group": "field/duplicate_document",
+      "text": "Make a second draft from Nimbus Trail greenhouse log for period 2027-03; carry over amount and customer unchanged."
+    },
+    {
+      "id": "test-duplicate_document-4",
+      "group": "field/duplicate_document",
+      "text": "Make a second draft from Jasper Observatory trail survey for period 2028-04; carry over amount and customer unchanged."
+    },
+    {
+      "id": "test-duplicate_document-5",
+      "group": "field/duplicate_document",
+      "text": "Make a second draft from Zephyr Hothouse telescope checklist for period 2027-05; carry over amount and customer unchanged."
+    },
+    {
+      "id": "test-extract_document_fields-1",
+      "group": "field/extract_document_fields",
+      "text": "From Jasper Observatory drone manifest, read only these labels: invoice_id, amount."
+    },
+    {
+      "id": "test-extract_document_fields-2",
+      "group": "field/extract_document_fields",
+      "text": "From the selected file, read only these labels: reference. This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-extract_document_fields-3",
+      "group": "field/extract_document_fields",
+      "text": "From Nimbus Trail greenhouse log, read only these labels: customer, currency."
+    },
+    {
+      "id": "test-extract_document_fields-4",
+      "group": "field/extract_document_fields",
+      "text": "From Jasper Observatory trail survey, read only these labels: due_date, invoice_date."
+    },
+    {
+      "id": "test-extract_document_fields-5",
+      "group": "field/extract_document_fields",
+      "text": "From Zephyr Hothouse telescope checklist, read only these labels: supplier."
+    },
+    {
+      "id": "test-compare_documents-1",
+      "group": "field/compare_documents",
+      "text": "Check for textual changes, inspection copy Jasper Observatory drone manifest versus the earlier Jasper Observatory drone manifest archive."
+    },
+    {
+      "id": "test-compare_documents-2",
+      "group": "field/compare_documents",
+      "text": "Check for textual changes, inspection copy the selected file versus the earlier Zephyr Hothouse observatory tally archive. This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-compare_documents-3",
+      "group": "field/compare_documents",
+      "text": "Check for textual changes, inspection copy Nimbus Trail greenhouse log versus the earlier Nimbus Trail greenhouse log archive."
+    },
+    {
+      "id": "test-compare_documents-4",
+      "group": "field/compare_documents",
+      "text": "Check for textual changes, inspection copy Jasper Observatory trail survey versus the earlier Jasper Observatory trail survey archive."
+    },
+    {
+      "id": "test-compare_documents-5",
+      "group": "field/compare_documents",
+      "text": "Check for textual changes, inspection copy Zephyr Hothouse telescope checklist versus the earlier Zephyr Hothouse telescope checklist archive."
+    },
+    {
+      "id": "test-analyze_spreadsheet-1",
+      "group": "field/analyze_spreadsheet",
+      "text": "From the field table Jasper Observatory drone manifest, calculate sum on column Samples."
+    },
+    {
+      "id": "test-analyze_spreadsheet-2",
+      "group": "field/analyze_spreadsheet",
+      "text": "From the field table the selected file, calculate count on column Samples, grouped by Station. This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-analyze_spreadsheet-3",
+      "group": "field/analyze_spreadsheet",
+      "text": "From the field table Nimbus Trail greenhouse log, calculate average on column Samples."
+    },
+    {
+      "id": "test-analyze_spreadsheet-4",
+      "group": "field/analyze_spreadsheet",
+      "text": "From the field table Jasper Observatory trail survey, calculate min on column Samples, grouped by Station."
+    },
+    {
+      "id": "test-analyze_spreadsheet-5",
+      "group": "field/analyze_spreadsheet",
+      "text": "From the field table Zephyr Hothouse telescope checklist, calculate max on column Samples."
+    },
+    {
+      "id": "test-generate_report-1",
+      "group": "field/generate_report",
+      "text": "For equipment handover I need an inventory of the csv documents. Use this workspace. The result is for our Jasper Observatory drone manifest meeting."
+    },
+    {
+      "id": "test-generate_report-2",
+      "group": "field/generate_report",
+      "text": "For the field briefing, report only tasks marked open. Use this workspace. The result is for our Zephyr Hothouse observatory tally meeting."
+    },
+    {
+      "id": "test-generate_report-3",
+      "group": "field/generate_report",
+      "text": "For equipment handover I need an inventory of the txt documents. Use this workspace. The result is for our Nimbus Trail greenhouse log meeting."
+    },
+    {
+      "id": "test-generate_report-4",
+      "group": "field/generate_report",
+      "text": "For the field briefing, report only tasks marked done. Use this workspace. The result is for our Jasper Observatory trail survey meeting."
+    },
+    {
+      "id": "test-generate_report-5",
+      "group": "field/generate_report",
+      "text": "For equipment handover I need an inventory of the docx documents. Use this workspace. The result is for our Zephyr Hothouse telescope checklist meeting."
+    },
+    {
+      "id": "test-create_tasks_from_document-1",
+      "group": "field/create_tasks_from_document",
+      "text": "Turn the marked next actions in Jasper Observatory drone manifest into proposed tasks that I can approve."
+    },
+    {
+      "id": "test-create_tasks_from_document-2",
+      "group": "field/create_tasks_from_document",
+      "text": "Turn the marked next actions in the selected file into proposed tasks that I can approve. This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-create_tasks_from_document-3",
+      "group": "field/create_tasks_from_document",
+      "text": "Turn the marked next actions in Nimbus Trail greenhouse log into proposed tasks that I can approve."
+    },
+    {
+      "id": "test-create_tasks_from_document-4",
+      "group": "field/create_tasks_from_document",
+      "text": "Turn the marked next actions in Jasper Observatory trail survey into proposed tasks that I can approve."
+    },
+    {
+      "id": "test-create_tasks_from_document-5",
+      "group": "field/create_tasks_from_document",
+      "text": "Turn the marked next actions in Zephyr Hothouse telescope checklist into proposed tasks that I can approve."
+    },
+    {
+      "id": "test-draft_email-1",
+      "group": "field/draft_email",
+      "text": "I need a neutral fieldwork email with the purpose to coordinate the next site visit, based on Jasper Observatory drone manifest."
+    },
+    {
+      "id": "test-draft_email-2",
+      "group": "field/draft_email",
+      "text": "I need a formal fieldwork email with the purpose to coordinate the next site visit, based on the selected file. This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-draft_email-3",
+      "group": "field/draft_email",
+      "text": "I need a friendly fieldwork email with the purpose to coordinate the next site visit, based on Nimbus Trail greenhouse log."
+    },
+    {
+      "id": "test-draft_email-4",
+      "group": "field/draft_email",
+      "text": "I need a neutral fieldwork email with the purpose to coordinate the next site visit, based on Jasper Observatory trail survey."
+    },
+    {
+      "id": "test-draft_email-5",
+      "group": "field/draft_email",
+      "text": "I need a formal fieldwork email with the purpose to coordinate the next site visit, based on Zephyr Hothouse telescope checklist."
+    },
+    {
+      "id": "test-modify_and_convert-1",
+      "group": "field/modify_and_convert",
+      "text": "Make a txt copy of Jasper Observatory drone manifest after changing the literal \"Inspection pending drone manifest\" to \"Inspection reviewed drone manifest\"."
+    },
+    {
+      "id": "test-modify_and_convert-2",
+      "group": "field/modify_and_convert",
+      "text": "Make a pdf copy of the selected file after changing the literal \"Inspection pending observatory tally\" to \"Inspection reviewed observatory tally\". This is for the Zephyr Hothouse observatory tally briefing."
+    },
+    {
+      "id": "test-modify_and_convert-3",
+      "group": "field/modify_and_convert",
+      "text": "Make a txt copy of Nimbus Trail greenhouse log after changing the literal \"Inspection pending greenhouse log\" to \"Inspection reviewed greenhouse log\"."
+    },
+    {
+      "id": "test-modify_and_convert-4",
+      "group": "field/modify_and_convert",
+      "text": "Make a pdf copy of Jasper Observatory trail survey after changing the literal \"Inspection pending trail survey\" to \"Inspection reviewed trail survey\"."
+    },
+    {
+      "id": "test-modify_and_convert-5",
+      "group": "field/modify_and_convert",
+      "text": "Make a txt copy of Zephyr Hothouse telescope checklist after changing the literal \"Inspection pending telescope checklist\" to \"Inspection reviewed telescope checklist\"."
+    },
+    {
+      "id": "test-clarification_required-1",
+      "group": "field/clarification_required",
+      "text": "Translate neither file; instead compare the survey against whichever version is best for Jasper Observatory drone manifest."
+    },
+    {
+      "id": "test-clarification_required-2",
+      "group": "field/clarification_required",
+      "text": "Turn Zephyr Hothouse observatory tally into a draft email but I have not chosen its purpose."
+    },
+    {
+      "id": "test-clarification_required-3",
+      "group": "field/clarification_required",
+      "text": "Read those figures in Nimbus Trail greenhouse log into the report."
+    },
+    {
+      "id": "test-clarification_required-4",
+      "group": "field/clarification_required",
+      "text": "Translate neither file; instead compare the survey against whichever version is best for Jasper Observatory trail survey."
+    },
+    {
+      "id": "test-clarification_required-5",
+      "group": "field/clarification_required",
+      "text": "Turn Zephyr Hothouse telescope checklist into a draft email but I have not chosen its purpose."
+    },
+    {
+      "id": "test-unsupported_intent-1",
+      "group": "field/unsupported_intent",
+      "text": "Buy replacement equipment for Jasper Observatory drone manifest."
+    },
+    {
+      "id": "test-unsupported_intent-2",
+      "group": "field/unsupported_intent",
+      "text": "Schedule a cloud training job based on Zephyr Hothouse observatory tally."
+    },
+    {
+      "id": "test-unsupported_intent-3",
+      "group": "field/unsupported_intent",
+      "text": "Call the inspector listed in Nimbus Trail greenhouse log."
+    },
+    {
+      "id": "test-unsupported_intent-4",
+      "group": "field/unsupported_intent",
+      "text": "Buy replacement equipment for Jasper Observatory trail survey."
+    },
+    {
+      "id": "test-unsupported_intent-5",
+      "group": "field/unsupported_intent",
+      "text": "Schedule a cloud training job based on Zephyr Hothouse telescope checklist."
+    }
+  ],
+  "holdout": [
+    {
+      "id": "holdout-search_documents-1",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs the archive entry for Velvet Playhouse theater cue book; restrict the lookup to csv."
+    },
+    {
+      "id": "holdout-search_documents-2",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs the archive entry for Tern Archive library returns; restrict the lookup to pdf."
+    },
+    {
+      "id": "holdout-search_documents-3",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs the archive entry for Moss Pavilion conservation diary; restrict the lookup to txt."
+    },
+    {
+      "id": "holdout-search_documents-4",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs the archive entry for Loon Conservatory craft fair roster; restrict the lookup to xlsx."
+    },
+    {
+      "id": "holdout-search_documents-5",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs the archive entry for Velvet Playhouse studio proof; restrict the lookup to docx."
+    },
+    {
+      "id": "holdout-search_documents-6",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs the archive entry for Tern Archive choir minutes; restrict the lookup to csv."
+    },
+    {
+      "id": "holdout-search_documents-7",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs teh archive entry for Moss Pavilion seed exchange; restrict the lookup to pdf."
+    },
+    {
+      "id": "holdout-search_documents-8",
+      "group": "community/search_documents",
+      "text": "Our coordinator needs the archive entry for Loon Conservatory aquarium tally; restrict the lookup to txt."
+    },
+    {
+      "id": "holdout-search_and_summarize-1",
+      "group": "community/search_and_summarize",
+      "text": "Turn Velvet Playhouse theater cue book into a brief digest for volunteers, focusing on the public program."
+    },
+    {
+      "id": "holdout-search_and_summarize-2",
+      "group": "community/search_and_summarize",
+      "text": "Turn the selected file into a bullets digest for volunteers, focusing on the public program. This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-search_and_summarize-3",
+      "group": "community/search_and_summarize",
+      "text": "Turn Moss Pavilion conservation diary into a detailed digest for volunteers, focusing on the public program."
+    },
+    {
+      "id": "holdout-search_and_summarize-4",
+      "group": "community/search_and_summarize",
+      "text": "Turn Loon Conservatory craft fair roster into a brief digest for volunteers, focusing on the public program."
+    },
+    {
+      "id": "holdout-search_and_summarize-5",
+      "group": "community/search_and_summarize",
+      "text": "Turn Velvet Playhouse studio proof into a bullets digest for volunteers, focusing on the public program."
+    },
+    {
+      "id": "holdout-search_and_summarize-6",
+      "group": "community/search_and_summarize",
+      "text": "Turn the selected file into a detailed digest for volunteers, focusing on the public program. This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-search_and_summarize-7",
+      "group": "community/search_and_summarize",
+      "text": "Turn Moss Pavilion seed exchange into a brief digest fro volunteers, focusing on the public program."
+    },
+    {
+      "id": "holdout-search_and_summarize-8",
+      "group": "community/search_and_summarize",
+      "text": "Turn Loon Conservatory aquarium tally into a bullets digest for volunteers, focusing on the public program."
+    },
+    {
+      "id": "holdout-duplicate_document-1",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of Velvet Playhouse theater cue book labeled 2030-01 while preserving both billing amount and customer."
+    },
+    {
+      "id": "holdout-duplicate_document-2",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of the selected file labeled 2031-02 while preserving both billing amount and customer. This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-duplicate_document-3",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of Moss Pavilion conservation diary labeled 2030-03 while preserving both billing amount and customer."
+    },
+    {
+      "id": "holdout-duplicate_document-4",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of Loon Conservatory craft fair roster labeled 2031-04 while preserving both billing amount and customer."
+    },
+    {
+      "id": "holdout-duplicate_document-5",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of Velvet Playhouse studio proof labeled 2030-05 while preserving both billing amount and customer."
+    },
+    {
+      "id": "holdout-duplicate_document-6",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of the selected file labeled 2031-06 while preserving both billing amount and customer. This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-duplicate_document-7",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of Moss Pavilion seed exchange labeled 2030-07 while preserving both billing amount and customer."
+    },
+    {
+      "id": "holdout-duplicate_document-8",
+      "group": "community/duplicate_document",
+      "text": "Archive a copy of Loon Conservatory aquarium tally labeled 2031-08 while preserving both billing amount and customer."
+    },
+    {
+      "id": "holdout-extract_document_fields-1",
+      "group": "community/extract_document_fields",
+      "text": "For our records, tell me the labeled invoice id plus amount in Velvet Playhouse theater cue book."
+    },
+    {
+      "id": "holdout-extract_document_fields-2",
+      "group": "community/extract_document_fields",
+      "text": "For our records, tell me the labeled reference in the selected file. This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-extract_document_fields-3",
+      "group": "community/extract_document_fields",
+      "text": "For our records, tell me the labeled customer plus currency in Moss Pavilion conservation diary."
+    },
+    {
+      "id": "holdout-extract_document_fields-4",
+      "group": "community/extract_document_fields",
+      "text": "For our records, tell me the labeled due date plus invoice date in Loon Conservatory craft fair roster."
+    },
+    {
+      "id": "holdout-extract_document_fields-5",
+      "group": "community/extract_document_fields",
+      "text": "For our records, tell me the labeled supplier in Velvet Playhouse studio proof."
+    },
+    {
+      "id": "holdout-extract_document_fields-6",
+      "group": "community/extract_document_fields",
+      "text": "For our records, tell me the labeled invoice id plus amount in the selected file. This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-extract_document_fields-7",
+      "group": "community/extract_document_fields",
+      "text": "fro our records, tell me the labeled reference in Moss Pavilion seed exchange."
+    },
+    {
+      "id": "holdout-extract_document_fields-8",
+      "group": "community/extract_document_fields",
+      "text": "For our records, tell me the labeled customer plus currency in Loon Conservatory aquarium tally."
+    },
+    {
+      "id": "holdout-compare_documents-1",
+      "group": "community/compare_documents",
+      "text": "What changed between Velvet Playhouse theater cue book and Velvet Playhouse theater cue book archive for the public record?"
+    },
+    {
+      "id": "holdout-compare_documents-2",
+      "group": "community/compare_documents",
+      "text": "What changed between the selected file and Tern Archive library returns archive for the public record? This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-compare_documents-3",
+      "group": "community/compare_documents",
+      "text": "What changed between Moss Pavilion conservation diary and Moss Pavilion conservation diary archive for the public record?"
+    },
+    {
+      "id": "holdout-compare_documents-4",
+      "group": "community/compare_documents",
+      "text": "What changed between Loon Conservatory craft fair roster and Loon Conservatory craft fair roster archive for the public record?"
+    },
+    {
+      "id": "holdout-compare_documents-5",
+      "group": "community/compare_documents",
+      "text": "What changed between Velvet Playhouse studio proof and Velvet Playhouse studio proof archive for the public record?"
+    },
+    {
+      "id": "holdout-compare_documents-6",
+      "group": "community/compare_documents",
+      "text": "What changed between the selected file and Tern Archive choir minutes archive for the public record? This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-compare_documents-7",
+      "group": "community/compare_documents",
+      "text": "What changed between Moss Pavilion seed exchange and Moss Pavilion seed exchange archive fro the public record?"
+    },
+    {
+      "id": "holdout-compare_documents-8",
+      "group": "community/compare_documents",
+      "text": "What changed between Loon Conservatory aquarium tally and Loon Conservatory aquarium tally archive for the public record?"
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-1",
+      "group": "community/analyze_spreadsheet",
+      "text": "For our attendance check, work out sum for the Visitors column in Velvet Playhouse theater cue book."
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-2",
+      "group": "community/analyze_spreadsheet",
+      "text": "For our attendance check, work out count for the Visitors column in the selected file, grouped by Venue. This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-3",
+      "group": "community/analyze_spreadsheet",
+      "text": "For our attendance check, work out average for the Visitors column in Moss Pavilion conservation diary."
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-4",
+      "group": "community/analyze_spreadsheet",
+      "text": "For our attendance check, work out min for the Visitors column in Loon Conservatory craft fair roster, grouped by Venue."
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-5",
+      "group": "community/analyze_spreadsheet",
+      "text": "For our attendance check, work out max for the Visitors column in Velvet Playhouse studio proof."
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-6",
+      "group": "community/analyze_spreadsheet",
+      "text": "For our attendance check, work out sum for the Visitors column in the selected file, grouped by Venue. This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-7",
+      "group": "community/analyze_spreadsheet",
+      "text": "fro our attendance check, work out count for the Visitors column in Moss Pavilion seed exchange."
+    },
+    {
+      "id": "holdout-analyze_spreadsheet-8",
+      "group": "community/analyze_spreadsheet",
+      "text": "For our attendance check, work out average for the Visitors column in Loon Conservatory aquarium tally, grouped by Venue."
+    },
+    {
+      "id": "holdout-generate_report-1",
+      "group": "community/generate_report",
+      "text": "Prepare the community archive inventory for csv records. Use the shared workspace. The result is for our Velvet Playhouse theater cue book meeting."
+    },
+    {
+      "id": "holdout-generate_report-2",
+      "group": "community/generate_report",
+      "text": "Create a volunteer task report, filtered to open tasks. Use the shared workspace. The result is for our Tern Archive library returns meeting."
+    },
+    {
+      "id": "holdout-generate_report-3",
+      "group": "community/generate_report",
+      "text": "Prepare the community archive inventory for txt records. Use the shared workspace. The result is for our Moss Pavilion conservation diary meeting."
+    },
+    {
+      "id": "holdout-generate_report-4",
+      "group": "community/generate_report",
+      "text": "Create a volunteer task report, filtered to done tasks. Use the shared workspace. The result is for our Loon Conservatory craft fair roster meeting."
+    },
+    {
+      "id": "holdout-generate_report-5",
+      "group": "community/generate_report",
+      "text": "Prepare the community archive inventory for docx records. Use the shared workspace. The result is for our Velvet Playhouse studio proof meeting."
+    },
+    {
+      "id": "holdout-generate_report-6",
+      "group": "community/generate_report",
+      "text": "Create a volunteer task report, filtered to open tasks. Use the shared workspace. The result is for our Tern Archive choir minutes meeting."
+    },
+    {
+      "id": "holdout-generate_report-7",
+      "group": "community/generate_report",
+      "text": "Prepare teh community archive inventory for pdf records. Use the shared workspace. The result is for our Moss Pavilion seed exchange meeting."
+    },
+    {
+      "id": "holdout-generate_report-8",
+      "group": "community/generate_report",
+      "text": "Create a volunteer task report, filtered to done tasks. Use the shared workspace. The result is for our Loon Conservatory aquarium tally meeting."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-1",
+      "group": "community/create_tasks_from_document",
+      "text": "Read the unchecked checklist in Velvet Playhouse theater cue book and propose follow-up tasks for review."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-2",
+      "group": "community/create_tasks_from_document",
+      "text": "Read the unchecked checklist in the selected file and propose follow-up tasks for review. This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-3",
+      "group": "community/create_tasks_from_document",
+      "text": "Read the unchecked checklist in Moss Pavilion conservation diary and propose follow-up tasks for review."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-4",
+      "group": "community/create_tasks_from_document",
+      "text": "Read the unchecked checklist in Loon Conservatory craft fair roster and propose follow-up tasks for review."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-5",
+      "group": "community/create_tasks_from_document",
+      "text": "Read the unchecked checklist in Velvet Playhouse studio proof and propose follow-up tasks for review."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-6",
+      "group": "community/create_tasks_from_document",
+      "text": "Read the unchecked checklist in the selected file and propose follow-up tasks for review. This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-7",
+      "group": "community/create_tasks_from_document",
+      "text": "Read teh unchecked checklist in Moss Pavilion seed exchange and propose follow-up tasks for review."
+    },
+    {
+      "id": "holdout-create_tasks_from_document-8",
+      "group": "community/create_tasks_from_document",
+      "text": "Read the unchecked checklist in Loon Conservatory aquarium tally and propose follow-up tasks for review."
+    },
+    {
+      "id": "holdout-draft_email-1",
+      "group": "community/draft_email",
+      "text": "For the community project, write a neutral draft from Velvet Playhouse theater cue book to invite volunteers to review the record. Leave it unsent."
+    },
+    {
+      "id": "holdout-draft_email-2",
+      "group": "community/draft_email",
+      "text": "For the community project, write a formal draft from the selected file to invite volunteers to review the record. Leave it unsent. This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-draft_email-3",
+      "group": "community/draft_email",
+      "text": "For the community project, write a friendly draft from Moss Pavilion conservation diary to invite volunteers to review the record. Leave it unsent."
+    },
+    {
+      "id": "holdout-draft_email-4",
+      "group": "community/draft_email",
+      "text": "For the community project, write a neutral draft from Loon Conservatory craft fair roster to invite volunteers to review the record. Leave it unsent."
+    },
+    {
+      "id": "holdout-draft_email-5",
+      "group": "community/draft_email",
+      "text": "For the community project, write a formal draft from Velvet Playhouse studio proof to invite volunteers to review the record. Leave it unsent."
+    },
+    {
+      "id": "holdout-draft_email-6",
+      "group": "community/draft_email",
+      "text": "For the community project, write a friendly draft from the selected file to invite volunteers to review the record. Leave it unsent. This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-draft_email-7",
+      "group": "community/draft_email",
+      "text": "fro the community project, write a neutral draft from Moss Pavilion seed exchange to invite volunteers to review the record. Leave it unsent."
+    },
+    {
+      "id": "holdout-draft_email-8",
+      "group": "community/draft_email",
+      "text": "For the community project, write a formal draft from Loon Conservatory aquarium tally to invite volunteers to review the record. Leave it unsent."
+    },
+    {
+      "id": "holdout-modify_and_convert-1",
+      "group": "community/modify_and_convert",
+      "text": "For the final handout export Velvet Playhouse theater cue book as txt, substituting \"Updated venue theater cue book\" for \"Former venue theater cue book\"."
+    },
+    {
+      "id": "holdout-modify_and_convert-2",
+      "group": "community/modify_and_convert",
+      "text": "For the final handout export the selected file as pdf, substituting \"Updated venue library returns\" for \"Former venue library returns\". This is for the Tern Archive library returns briefing."
+    },
+    {
+      "id": "holdout-modify_and_convert-3",
+      "group": "community/modify_and_convert",
+      "text": "For the final handout export Moss Pavilion conservation diary as txt, substituting \"Updated venue conservation diary\" for \"Former venue conservation diary\"."
+    },
+    {
+      "id": "holdout-modify_and_convert-4",
+      "group": "community/modify_and_convert",
+      "text": "For the final handout export Loon Conservatory craft fair roster as pdf, substituting \"Updated venue craft fair roster\" for \"Former venue craft fair roster\"."
+    },
+    {
+      "id": "holdout-modify_and_convert-5",
+      "group": "community/modify_and_convert",
+      "text": "For the final handout export Velvet Playhouse studio proof as txt, substituting \"Updated venue studio proof\" for \"Former venue studio proof\"."
+    },
+    {
+      "id": "holdout-modify_and_convert-6",
+      "group": "community/modify_and_convert",
+      "text": "For the final handout export the selected file as pdf, substituting \"Updated venue choir minutes\" for \"Former venue choir minutes\". This is for the Tern Archive choir minutes briefing."
+    },
+    {
+      "id": "holdout-modify_and_convert-7",
+      "group": "community/modify_and_convert",
+      "text": "fro the final handout export Moss Pavilion seed exchange as txt, substituting \"Updated venue seed exchange\" for \"Former venue seed exchange\"."
+    },
+    {
+      "id": "holdout-modify_and_convert-8",
+      "group": "community/modify_and_convert",
+      "text": "For the final handout export Loon Conservatory aquarium tally as pdf, substituting \"Updated venue aquarium tally\" for \"Former venue aquarium tally\"."
+    },
+    {
+      "id": "holdout-clarification_required-1",
+      "group": "community/clarification_required",
+      "text": "Make a new version of Velvet Playhouse theater cue book with the usual edits."
+    },
+    {
+      "id": "holdout-clarification_required-2",
+      "group": "community/clarification_required",
+      "text": "Create a copy of Tern Archive library returns but I am undecided about preserving the amount and customer."
+    },
+    {
+      "id": "holdout-clarification_required-3",
+      "group": "community/clarification_required",
+      "text": "Make tasks from a source for Moss Pavilion conservation diary but I have not identified the file."
+    },
+    {
+      "id": "holdout-clarification_required-4",
+      "group": "community/clarification_required",
+      "text": "Make a new version of Loon Conservatory craft fair roster with the usual edits."
+    },
+    {
+      "id": "holdout-clarification_required-5",
+      "group": "community/clarification_required",
+      "text": "Create a copy of Velvet Playhouse studio proof but I am undecided about preserving the amount and customer."
+    },
+    {
+      "id": "holdout-clarification_required-6",
+      "group": "community/clarification_required",
+      "text": "Make tasks from a source for Tern Archive choir minutes but I have not identified the file."
+    },
+    {
+      "id": "holdout-clarification_required-7",
+      "group": "community/clarification_required",
+      "text": "Make a new version of Moss Pavilion seed exchange with teh usual edits."
+    },
+    {
+      "id": "holdout-clarification_required-8",
+      "group": "community/clarification_required",
+      "text": "Create a copy of Loon Conservatory aquarium tally but I am undecided about preserving the amount and customer."
+    },
+    {
+      "id": "holdout-clarification_required-9",
+      "group": "community/clarification_required",
+      "text": "Make tasks from a source for Velvet Playhouse theater cue book but I have not identified the file. This is the revised community briefing."
+    },
+    {
+      "id": "holdout-clarification_required-10",
+      "group": "community/clarification_required",
+      "text": "Um, dictated request: Make a new version of Tern Archive library returns with the usual edits. This is the revised community briefing."
+    },
+    {
+      "id": "holdout-unsupported_intent-1",
+      "group": "community/unsupported_intent",
+      "text": "Publish an announcement to social media about Velvet Playhouse theater cue book."
+    },
+    {
+      "id": "holdout-unsupported_intent-2",
+      "group": "community/unsupported_intent",
+      "text": "Book tickets for the event in Tern Archive library returns."
+    },
+    {
+      "id": "holdout-unsupported_intent-3",
+      "group": "community/unsupported_intent",
+      "text": "Delete the volunteer database mentioned in Moss Pavilion conservation diary."
+    },
+    {
+      "id": "holdout-unsupported_intent-4",
+      "group": "community/unsupported_intent",
+      "text": "Publish an announcement to social media about Loon Conservatory craft fair roster."
+    },
+    {
+      "id": "holdout-unsupported_intent-5",
+      "group": "community/unsupported_intent",
+      "text": "Book tickets for the event in Velvet Playhouse studio proof."
+    },
+    {
+      "id": "holdout-unsupported_intent-6",
+      "group": "community/unsupported_intent",
+      "text": "Delete the volunteer database mentioned in Tern Archive choir minutes."
+    },
+    {
+      "id": "holdout-unsupported_intent-7",
+      "group": "community/unsupported_intent",
+      "text": "Publish an announcement to social media about Moss Pavilion seed exchange."
+    },
+    {
+      "id": "holdout-unsupported_intent-8",
+      "group": "community/unsupported_intent",
+      "text": "Book tickets for the event in Loon Conservatory aquarium tally."
+    },
+    {
+      "id": "holdout-unsupported_intent-9",
+      "group": "community/unsupported_intent",
+      "text": "Delete the volunteer database mentioned in Velvet Playhouse theater cue book. This is the revised community briefing."
+    },
+    {
+      "id": "holdout-unsupported_intent-10",
+      "group": "community/unsupported_intent",
+      "text": "Um, dictated request: Publish an announcement to social media about Tern Archive library returns. This is the revised community briefing."
+    }
+  ]
+}

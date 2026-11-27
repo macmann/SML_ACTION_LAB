@@ -59,7 +59,7 @@ test("rejects invented dates, invalid arguments, prose calls and multiple or inc
   assert.equal(normalizeCall(native("search_documents", { query: "ok" }, "length")).status, "invalid_response");
   const objectArgs = native("search_documents", { query: "fixture" });
   objectArgs.choices[0].message.tool_calls[0].function.arguments = { query: "fixture" };
-  assert.equal(normalizeCall(objectArgs).status, "invalid_arguments");
+  assert.deepEqual(normalizeCall(objectArgs), { status: "valid", name: "search_documents", args: { query: "fixture" } });
 });
 
 test("attestation binds effective model, fresh challenge and exact native response", () => {

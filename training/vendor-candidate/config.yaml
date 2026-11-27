@@ -1,0 +1,11 @@
+# Candidate only. Verify exact fields against the current Distil CLI before upload.
+task: chat-completion
+student: Qwen3-0.6B
+teacher: openai.gpt-oss-120b
+judge: openai.gpt-oss-120b
+thinking: false
+lora_rank: 16
+sft_epochs: 4
+rlvr: false
+train: train.jsonl
+test: test.jsonl

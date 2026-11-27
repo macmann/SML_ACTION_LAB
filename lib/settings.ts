@@ -21,12 +21,20 @@ export const preferences = z.object({
   shareDocuments: z.boolean(),
 });
 
+export const speechSettings = z.strictObject({
+  enabled: z.boolean(), model: z.enum(["off", "base"]),
+  language: z.enum(["auto", "en", "de", "fr", "es", "it", "zh", "ja", "my"]),
+  maxSeconds: z.number().int().min(5).max(60), readAloud: z.boolean(),
+});
+export const defaultSpeech = { enabled: false, model: "base", language: "auto", maxSeconds: 60, readAloud: false } as const;
+
 const schema = z.object({
   database: envelope.optional(),
   databaseGeneration: z.number().int().positive().optional(),
   providerChoice: z.enum(["configured", "skipped"]).optional(),
   distil: provider.optional(), comparison: provider.optional(), writer: provider.optional(),
   preferences: preferences.optional(),
+  speechSettings: speechSettings.optional(),
   routingProfile: importedProfile.optional(),
 });
 

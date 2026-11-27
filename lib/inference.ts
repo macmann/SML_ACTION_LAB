@@ -101,3 +101,11 @@ export async function summarize(settings: Settings, profile: ModelProfile, instr
   return { excerpts: reduceQuotes(summaries), coverage: { ...coverage, plannedSections: coverage.coveredSections,
     coveredSections: verifiedSections, complete: verifiedSections === coverage.totalSections } };
 }
+
+
+export async function benchmarkContent(settings: Settings, profile: ModelProfile,
+  input: { action: string; instruction: string; source: string }) {
+  const challenge = profile.provenance?.attestationPublicKey ? randomBytes(24).toString("base64url") : undefined;
+  const response = await completion(settings, profile, JSON.stringify(input), challenge, true);
+  return { response, text: finishedText(response), identity: identityOf(profile, challenge, response) };
+}

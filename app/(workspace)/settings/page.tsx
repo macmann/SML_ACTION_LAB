@@ -2,7 +2,8 @@ import { SettingsForm } from "@/components/settings-form";
 import { currentAdmin } from "@/lib/auth";
 import { requireAdmin } from "@/lib/access";
 import { schemaHash, schemaVersion } from "@/lib/tool-registry.mjs";
-import { defaultPreferences, roles, settingsFrom } from "@/lib/settings";
+import { speechCapabilities } from "@/lib/speech-native.mjs";
+import { defaultSpeech, defaultPreferences, roles, settingsFrom } from "@/lib/settings";
 
 export const metadata = { title: "Settings" };
 const inputClass = "min-h-10 w-full rounded-md border border-[var(--line)] bg-[var(--page)] px-3 py-2";
@@ -22,6 +23,8 @@ export default async function SettingsPage() {
   const settings = settingsFrom(state);
   const revision: number = state.revision;
   const prefs = settings.preferences ?? defaultPreferences;
+  const speech = settings.speechSettings ?? defaultSpeech;
+  const speechStatus = await speechCapabilities(speech);
 
   return (
     <>
@@ -95,6 +98,28 @@ export default async function SettingsPage() {
           </label>
         </SettingsForm>
       </Panel>}
+
+      <Panel title="Local speech">
+        <p>FFmpeg {speechStatus.ffmpeg ? "available" : "missing"} · Whisper CLI {speechStatus.whisper ? "available" : "missing"} · Piper {speechStatus.piper ? "available" : "missing"}</p>
+        <p>Whisper model {speechStatus.whisperModel ? "installed" : "missing"} · English Piper voice {speechStatus.piperVoice ? "installed" : "missing"}</p>
+        <SettingsForm operation="speech" revision={revision} submit="Save speech settings">
+          <label className="flex gap-2"><input type="checkbox" name="enabled" defaultChecked={speech.enabled} />Enable local speech</label>
+          <label className="grid gap-1">Whisper model
+            <select className={inputClass} name="model" defaultValue={speech.model}>
+              <option value="base">Base multilingual</option><option value="off">Transcription off</option>
+            </select>
+          </label>
+          <label className="grid gap-1">Transcription language
+            <select className={inputClass} name="language" defaultValue={speech.language}>
+              {["auto", "en", "de", "fr", "es", "it", "zh", "ja", "my"].map((language) => <option key={language}>{language}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-1">Maximum recording seconds
+            <input className={inputClass} name="maxSeconds" type="number" required min={5} max={60} defaultValue={speech.maxSeconds} />
+          </label>
+          <label className="flex gap-2"><input type="checkbox" name="readAloud" defaultChecked={speech.readAloud} />Enable English read-aloud with Lessac Low</label>
+        </SettingsForm>
+      </Panel>
 
       <Panel title="Administrator password">
         <SettingsForm operation="password" revision={revision} submit="Change password">
