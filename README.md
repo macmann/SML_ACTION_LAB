@@ -30,6 +30,10 @@ The app defaults to 25 MiB per upload with a 64 MiB ceiling. Text and CSV inputs
 
 Run workspace migrations after upgrading to Phase 5. Open a document preview to edit a supported DOCX template or create a PDF invoice draft. Review changes and approve the version before downloading it. Evidence summaries require explicit source selection and sharing consent. [Document automation](docs/document-automation.md)
 
+## Work with business records
+
+After applying migration 4, analyze uploaded tables from the document preview, manage task and note records in **Tasks / Notes**, and verify imports or approve invoice workflows in **Invoices**. The pages offer authenticated reports in XLSX, CSV and PDF. [Spreadsheet and business workflow guide](docs/business-workflows.md)
+
 ## Run the assistant
 
 Apply workspace migrations again after upgrading to Phase 4. Configure Distil in Settings and import JSON routing metadata if available. The Assistant offers strict execution, Distil model-only, and comparison model-only modes. Use Documents to attach sources, then explicitly select them in the turn. Drafts and summaries also require a configured writer and document-sharing consent.

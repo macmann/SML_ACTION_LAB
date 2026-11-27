@@ -27,7 +27,7 @@ async function complete(req, res) {
         role: "assistant", content: JSON.stringify([{ ref: section.id, quote: "UNTRUSTED-DOCUMENT-DATA" }]),
       } }] });
     }
-    if (!payload.source.includes("UNTRUSTED-DOCUMENT-DATA") || payload.source.length > 8000) return res.writeHead(400).end();
+    if (!(payload.source.includes("UNTRUSTED-DOCUMENT-DATA") || payload.action === "draft_email" && JSON.parse(payload.source).currency === "EUR") || payload.source.length > 8000) return res.writeHead(400).end();
     if (payload.instruction.includes("malicious")) {
       return send(res, { model: "fixture", choices: [{ finish_reason: "tool_calls", message: { role: "assistant", tool_calls: [task] } }] });
     }
@@ -46,6 +46,7 @@ async function complete(req, res) {
     "fixture malicious arguments": [call("search_documents", { query: "QZ-381", path: "/fixture", url: "https://invalid.example" })],
     "fixture unsupported": [call("unsupported_intent", { reason: "That request is outside the profile." })],
     "fixture clarify": [call("clarification_required", { question: "Which source should I use?" })],
+    "fixture no matches": [call("search_documents", { query: "complete-no-match-fixture" })],
     "fixture search QZ-381": [call("search_documents", { query: "QZ-381" })],
     "fixture ambiguous QZ-381": [call("extract_document_fields", { source_query: "QZ-381", fields: ["invoice_id"] })],
     "fixture extract": [call("extract_document_fields", { source_query: "@active:1", fields: ["invoice_id", "customer", "amount"] })],

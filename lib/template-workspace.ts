@@ -122,8 +122,8 @@ export async function executeTemplate(workspace: Workspace, client: pg.PoolClien
     // so an unspecified currency is never fabricated.
     await client.query("INSERT INTO slm_workspace.template_invoice_numbers (number) VALUES (lower($1))", [invoice.number])
       .catch((error) => { if (error.code === "23505") throw new WorkspaceError("The invoice number is already registered.", 409); throw error; });
-    if (invoicePdf) await client.query("INSERT INTO slm_workspace.invoices (id,invoice_number,currency,issued_on) VALUES ($1,$2,$3,$4)",
-      [id, invoice.number, invoicePdf.currency, invoice.date]);
+    if (invoicePdf) await client.query("INSERT INTO slm_workspace.invoices (id,invoice_number,currency,issued_on,customer,due_on,amount,tax,verified) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true)",
+      [id, invoice.number, invoicePdf.currency, invoice.date, invoicePdf.customer, invoice.dueDate, invoicePdf.amount, invoicePdf.tax ?? null]);
   }
   let bytes: Buffer;
   try {

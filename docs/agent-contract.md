@@ -46,3 +46,5 @@ A verified mutation resolves its source and produces an immutable pending plan. 
 Inference records contain exact system prompt and profile settings, action name, validation status, execution status, verified or unverified identity, and separate routing, writing and execution times. They exclude request text, document text, tool arguments, raw provider responses and credentials. Approval records separately retain the bounded parameters needed for review. No email is sent and assistant-generated files remain separate from their source.
 
 Phase 5 adds chunked evidence summaries and manual version editing without changing the trained tool schema. [Document automation](document-automation.md)
+
+Phase 6 preserves the trained v1 schema and adds manual spreadsheet controls and an individually approved invoice workflow. The latter is outside the trained registry. [Business workflows](business-workflows.md)

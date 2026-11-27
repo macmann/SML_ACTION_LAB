@@ -6,17 +6,19 @@ import { executeProposal, type Proposal } from "./agent-actions";
 import { useDocuments, invalidateDocuments, removeDocumentFiles, type Workspace } from "./documents";
 import { WorkspaceError, withDatabase, workspaceId } from "./database";
 import { executeTemplate, templatePlanSchema, type TemplatePlan } from "./template-workspace";
+import { executeWorkflow, workflowPlan, type WorkflowPlan } from "./invoice-workflow";
 import { configuredProfile } from "./inference";
 import { settingsFrom } from "./settings";
 import { hash, schemaHash, schemaVersion } from "./tool-registry.mjs";
 
 const source = { sourceId: z.uuid(), sourceTitle: z.string().min(1).max(180) };
-type ApprovedPlan = Proposal | TemplatePlan;
-const proposalValue = z.discriminatedUnion("tool", [
-  templatePlanSchema,
+type ApprovedPlan = Proposal | TemplatePlan | WorkflowPlan;
+const proposalValue = z.union([
+  templatePlanSchema, workflowPlan,
   z.strictObject({ ...source, tool: z.literal("duplicate_document"), targetPeriod: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
     preserveAmount: z.literal(true), preserveCustomer: z.literal(true), originalHash: z.string().regex(/^[a-f0-9]{64}$/).optional() }),
-  z.strictObject({ ...source, tool: z.literal("create_tasks_from_document"), titles: z.array(z.string().min(1).max(140)).min(1).max(12) }),
+  z.strictObject({ ...source, tool: z.literal("create_tasks_from_document"), titles: z.array(z.string().min(1).max(140)).min(1).max(12),
+    evidence: z.array(z.strictObject({ reference: z.string().max(250), quote: z.string().max(200) })).max(12).optional() }),
   z.strictObject({ ...source, tool: z.literal("modify_and_convert"), output: z.enum(["txt", "pdf"]),
     replacements: z.array(z.strictObject({ find: z.string().min(1).max(120), replace: z.string().max(200) })).min(1).max(12) }),
 ]);
@@ -27,11 +29,11 @@ type Row = { id: string; status: string; request: unknown; schema_version: strin
 const columns = "id,status,request,schema_version,proposal_hash,idempotency_key,database_generation,expires_at,updated_at,outcome";
 const digest = (request: Stored, turn: string, generation: number) => hash({ request, turn, generation, version: schemaVersion });
 
-export async function propose(pool: pg.Pool, generation: number, turn: string, profileId: string, plan: ApprovedPlan) {
+export async function propose(pool: pg.Pool, generation: number, turn: string, profileId: string, plan: ApprovedPlan, client?: pg.PoolClient) {
   const request = requestSchema.parse({ profileId, schemaHash, plan });
   const id = randomUUID();
   const proposalHash = digest(request, turn, generation);
-  const { rows: [row] } = await pool.query<Row>(`INSERT INTO slm_workspace.approvals
+  const { rows: [row] } = await (client ?? pool).query<Row>(`INSERT INTO slm_workspace.approvals
     (id,status,request,idempotency_key,schema_version,proposal_hash,database_generation,expires_at)
     VALUES ($1,'pending',$2,$3,$4,$5,$6,now() + interval '15 minutes')
     ON CONFLICT (idempotency_key) DO NOTHING RETURNING ${columns}`,
@@ -115,9 +117,10 @@ async function execute(pool: pg.Pool, workspace: Workspace, row: Row, plan: Appr
   let failureMessage = "The approved action failed. It was not retried.";
   try {
     await client.query("BEGIN");
-    if (plan.tool === "edit_document_template") await client.query("SET LOCAL idle_in_transaction_session_timeout = '45s'");
+    if (plan.tool === "edit_document_template" || plan.tool === "invoice_workflow") await client.query("SET LOCAL idle_in_transaction_session_timeout = '45s'");
     const outcome = plan.tool === "edit_document_template" ? await executeTemplate(workspace, client, row.id, plan) :
-      await executeProposal(workspace, client, row.id, plan);
+      plan.tool === "invoice_workflow" ? await executeWorkflow(client, row.id, plan) :
+        await executeProposal(workspace, client, row.id, plan);
     await finish(client, row, "succeeded", outcome, Date.now() - start);
     commitStarted = true;
     await client.query("COMMIT");
@@ -130,7 +133,7 @@ async function execute(pool: pg.Pool, workspace: Workspace, row: Row, plan: Appr
     invalidateDocuments();
   }
   if (!failed) return;
-  if (!commitStarted && plan.tool !== "create_tasks_from_document") await removeDocumentFiles(workspace.namespace, row.id);
+  if (!commitStarted && plan.tool !== "create_tasks_from_document" && plan.tool !== "invoice_workflow") await removeDocumentFiles(workspace.namespace, row.id);
   if (!commitStarted || (await read(pool, row.id))?.status === "executing") {
     await fail(pool, row, failureMessage, Date.now() - start);
   }
@@ -161,7 +164,7 @@ export function approve(id: string, expectedHash: string) {
     if (parsed.data.profileId !== "manual") {
       const enabledProfile = configuredProfile(settingsFrom(await store.load()), "distil");
       if (parsed.data.profileId !== enabledProfile.id) throw new WorkspaceError("The routing profile changed. Submit a new request.", 409);
-    } else if (parsed.data.plan.tool !== "edit_document_template") {
+    } else if (parsed.data.plan.tool !== "edit_document_template" && parsed.data.plan.tool !== "invoice_workflow") {
       throw new WorkspaceError("The approval origin is invalid.", 409);
     }
     if (await claim(pool, row, parsed.data.plan.tool)) await execute(pool, workspace, row, parsed.data.plan);

@@ -2,13 +2,14 @@ import PDFDocument from "pdfkit";
 import type pg from "pg";
 import { documentSections, insertDocument, metadataFor, prepareDocument, type Workspace } from "./documents";
 import { type Metadata } from "./document-search";
-import { readOriginal } from "./document-files";
-import { extractTableIsolated } from "./document-worker";
+import { invoiceInput } from "./business-validation";
+import { getInvoice } from "./business";
+import { analyzeSpreadsheet } from "./spreadsheet";
 import { mediaTypes, type Section } from "./extraction";
 import { buildTemplatePlan, originalBytes, checksum, copyDocxVersion, type TemplatePlan } from "./template-workspace";
 import { evidencedField } from "./evidence.mjs";
 import { WorkspaceError } from "./database";
-import { aggregateTable, applyReplacements, taskTitles } from "./agent-rules.mjs";
+import { applyReplacements, taskTitles } from "./agent-rules.mjs";
 
 type DateFilter = { field: "uploaded" | "document"; from?: string; to?: string };
 type Filters = { file_type?: keyof typeof mediaTypes; date_filter?: DateFilter; tag?: string; task_status?: string };
@@ -18,7 +19,7 @@ type Draft = { action: string; instruction: string; source: string; sourceId: st
 type Source = { sourceId: string; sourceTitle: string };
 export type Proposal = Source & (
   { tool: "duplicate_document"; targetPeriod: string; preserveAmount: true; preserveCustomer: true; originalHash?: string }
-  | { tool: "create_tasks_from_document"; titles: string[] }
+  | { tool: "create_tasks_from_document"; titles: string[]; evidence?: { reference: string; quote: string }[] }
   | { tool: "modify_and_convert"; replacements: Replacements; output: "txt" | "pdf" }
 );
 export type ActionResult = { result: unknown } | { draft: Draft } | { proposal: Proposal | TemplatePlan; preview?: unknown };
@@ -106,7 +107,8 @@ export async function performAction(workspace: Workspace, pool: pg.Pool, tool: s
     }
     const { rows } = await pool.query("SELECT status, count(*)::int AS total FROM slm_workspace.tasks WHERE ($1::text IS NULL OR status = $1) GROUP BY status ORDER BY status",
       [filters.task_status ?? null]);
-    return { result: { tasks: rows } };
+    return { result: { tasks: rows, downloads: ["xlsx", "csv", "pdf"].map((format) =>
+      "/api/business/reports?report=tasks&format=" + format + (filters.task_status ? "&status=" + filters.task_status : "")) } };
   }
   if (tool === "compare_documents") {
     const left = resolve(workspace, text(args, "left_query"), active);
@@ -133,18 +135,16 @@ export async function performAction(workspace: Workspace, pool: pg.Pool, tool: s
   const selected = resolve(workspace, text(args, tool === "search_and_summarize" ? "query" : "source_query"), active);
   const source = { sourceId: selected.id, sourceTitle: selected.title };
   if (tool === "analyze_spreadsheet") {
-    const format = selected.mediaType === mediaTypes.csv ? "csv" : selected.mediaType === mediaTypes.xlsx ? "xlsx" : null;
-    if (!format) throw new Clarification("Select a CSV or XLSX document.");
-    const { file, size } = await readOriginal(workspace.namespace, selected.id);
     try {
-      if (size > 64 * 1024 ** 2) throw new Clarification("The spreadsheet exceeds the analysis limit.");
-      const rows = await extractTableIsolated(await file.readFile(), format).catch(() => {
-        throw new Clarification("Provide a well-formed CSV or an XLSX file with one nonempty worksheet.");
+      const analysis = await analyzeSpreadsheet(workspace, selected.id, {
+        metric: text(args, "metric"), groupBy: text(args, "group_by") || undefined,
+        operation: args.operation as "sum" | "count" | "average" | "min" | "max",
       });
-      const groups = aggregateTable(rows, text(args, "metric"), text(args, "group_by"), text(args, "operation"));
-      if (!groups) throw new Clarification("Use exact, unique column names and unambiguous numeric values. Formula results are excluded.");
-      return { result: { source: plainMetadata(selected), operation: args.operation, groups } };
-    } finally { await file.close(); }
+      return { result: { source: plainMetadata(selected), ...analysis } };
+    } catch (error) {
+      if (error instanceof WorkspaceError) throw new Clarification(error.message);
+      throw error;
+    }
   }
 
   const sections = await documentSections(pool, selected.id);
@@ -155,12 +155,29 @@ export async function performAction(workspace: Workspace, pool: pg.Pool, tool: s
   if (tool === "search_and_summarize" || tool === "draft_email") {
     const instruction = tool === "draft_email" ? JSON.stringify({ purpose: args.purpose, tone: args.tone }) :
       JSON.stringify({ focus: args.focus, summary_style: args.summary_style });
-    return { draft: { action: tool, instruction, source: body.slice(0, 8000), sourceId: selected.id, sections: tool === "search_and_summarize" ? sections : undefined } };
+    let excerpt = body.slice(0, 8000);
+    if (tool === "draft_email" && ["invoice_id", "amount"].some((key) => evidencedField(sections, key).status !== "missing")) {
+      const { rows } = await pool.query<{ id: string }>("SELECT id FROM slm_workspace.invoices WHERE source_document=$1 AND verified LIMIT 2", [selected.id]);
+      if (rows.length !== 1) throw new Clarification("Record and verify one invoice linked to this source before drafting an invoice email.");
+      const invoice = await getInvoice(pool, rows[0].id);
+      const data = invoiceInput.safeParse({ number: invoice.number, currency: invoice.currency, customer: invoice.customer,
+        amount: invoice.amount, tax: invoice.tax, issued: invoice.issued, due: invoice.due, source: invoice.source });
+      if (!data.success) throw new Clarification("The verified invoice is missing required billing details.");
+      excerpt = JSON.stringify({ ...data.data, source: undefined, total: invoice.total, status: invoice.status });
+    }
+    return { draft: { action: tool, instruction, source: excerpt, sourceId: selected.id, sections: tool === "search_and_summarize" ? sections : undefined } };
   }
   if (tool === "create_tasks_from_document") {
-    const titles = taskTitles(body);
-    if (!titles.length || titles.length > 12) throw new Clarification("The source must contain between 1 and 12 distinct TODO or unchecked checklist lines.");
-    return { proposal: { ...source, tool, titles } };
+    const selected = new Map<string, { title: string; reference: string; quote: string }>();
+    for (const section of sections) for (const line of section.text.split(/\r?\n/)) {
+      const [title] = taskTitles(line);
+      if (title && !selected.has(title.toLowerCase())) selected.set(title.toLowerCase(),
+        { title, reference: section.reference, quote: line.trim().slice(0, 200) });
+    }
+    const sources = [...selected.values()];
+    const titles = sources.map((item) => item.title);
+    if (!titles.length || titles.length > 12) throw new Clarification("The source must contain between 1 and 12 distinct TODO, action-item or unchecked checklist lines.");
+    return { proposal: { ...source, tool, titles, evidence: sources.map(({ reference, quote }) => ({ reference, quote })) } };
   }
   if (tool === "duplicate_document") {
     if (args.preserve_amount !== true || args.preserve_customer !== true || (selected.mediaType !== mediaTypes.docx && body.length > 23_900)) {
@@ -206,8 +223,10 @@ export async function executeProposal(workspace: Workspace, client: pg.PoolClien
   metadataFor(workspace, proposal.sourceId);
   if (proposal.tool === "create_tasks_from_document") {
     const { rows } = await client.query<{ id: string; title: string }>(`
-      INSERT INTO slm_workspace.tasks (id,title)
-      SELECT gen_random_uuid(), title FROM unnest($1::text[]) AS p(title) RETURNING id,title`, [proposal.titles]);
+      INSERT INTO slm_workspace.tasks (id,title,origin_approval,evidence)
+      SELECT gen_random_uuid(), title,$2::uuid,$3::jsonb->((n-1)::int)
+      FROM unnest($1::text[]) WITH ORDINALITY AS p(title,n) RETURNING id,title`,
+      [proposal.titles, id, JSON.stringify(proposal.evidence ?? [])]);
     return { tasks: rows };
   }
   if (proposal.tool === "duplicate_document" && proposal.originalHash) return copyDocxVersion(workspace, client, id,

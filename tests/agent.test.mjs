@@ -86,5 +86,8 @@ test("document data stays literal, ambiguity stays explicit, and spreadsheet dec
   assert.equal(applyReplacements("abc", [{ find: "missing", replace: "x" }], "txt"), null);
   assert.deepEqual(aggregateTable([["Group", "Amount"], ["A", "0.1"], ["A", "0.2"]], "Amount", "Group", "sum"), [{ group: "A", value: "0.3" }]);
   assert.equal(aggregateTable([["Amount", "Amount"], ["12", "13"]], "Amount", "", "sum"), null);
+  assert.deepEqual(aggregateTable([["Amount", "Amount"], ["12", "13"]], "column:2", "", "sum"),
+    [{ group: "All rows", value: "13" }]);
+  assert.deepEqual(taskTitles("Action item: Verify the fictional order"), ["Verify the fictional order"]);
   assert.equal(aggregateTable([["Amount"], ["USD 12"]], "Amount", "", "sum"), null);
 });

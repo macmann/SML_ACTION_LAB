@@ -1,8 +1,8 @@
 import { fork } from "node:child_process";
 import { join } from "node:path";
-import { DocumentError, type Format, type Section } from "./extraction";
+import { DocumentError, type Format, type Section, type SheetData, type TableOptions } from "./extraction";
 
-function parseIsolated<T>(bytes: Buffer, format: Format, table = false): Promise<T> {
+function parseIsolated<T>(bytes: Buffer, format: Format, table?: TableOptions): Promise<T> {
   return new Promise((resolve, reject) => {
     const worker = fork(join(/* turbopackIgnore: true */ process.cwd(), "scripts/extract-document.mjs"), [], {
       stdio: ["ignore", "ignore", "ignore", "ipc"], serialization: "advanced",
@@ -26,6 +26,6 @@ export function extractIsolated(bytes: Buffer, format: Format) {
   return parseIsolated<Section[]>(bytes, format);
 }
 
-export function extractTableIsolated(bytes: Buffer, format: "csv" | "xlsx") {
-  return parseIsolated<string[][]>(bytes, format, true);
+export function extractTableIsolated(bytes: Buffer, format: "csv" | "xlsx", options: TableOptions = {}) {
+  return parseIsolated<SheetData>(bytes, format, options);
 }

@@ -136,4 +136,27 @@ CREATE TABLE slm_workspace.template_invoice_numbers (
   number text PRIMARY KEY
 );
 `,
+}, {
+  version: 4,
+  sql: `
+ALTER TABLE slm_workspace.tasks ADD COLUMN origin_approval uuid, ADD COLUMN evidence jsonb,
+  ADD COLUMN source_invoice uuid REFERENCES slm_workspace.invoices ON DELETE SET NULL;
+CREATE UNIQUE INDEX tasks_approval_title ON slm_workspace.tasks(origin_approval, lower(title)) WHERE origin_approval IS NOT NULL;
+ALTER TABLE slm_workspace.invoices ADD COLUMN customer text, ADD COLUMN due_on date,
+  ADD COLUMN amount numeric(20,6), ADD COLUMN tax numeric(20,6),
+  ADD COLUMN source_document uuid REFERENCES slm_workspace.documents ON DELETE SET NULL,
+  ADD COLUMN verified boolean NOT NULL DEFAULT false, ADD COLUMN revision integer NOT NULL DEFAULT 1,
+  ADD CONSTRAINT invoice_workflow_status CHECK (status IN ('imported','draft','unpaid','paid'));
+UPDATE slm_workspace.invoices SET status='imported' WHERE status='draft' AND NOT verified;
+CREATE TABLE slm_workspace.expenses (
+  id uuid PRIMARY KEY, description text NOT NULL, incurred_on date NOT NULL,
+  amount numeric(20,6) NOT NULL CHECK (amount >= 0), currency text NOT NULL
+);
+CREATE TABLE slm_workspace.invoice_workflows (
+  id uuid PRIMARY KEY, source_invoice uuid NOT NULL REFERENCES slm_workspace.invoices,
+  draft_invoice uuid REFERENCES slm_workspace.invoices, email_draft text,
+  stage text NOT NULL CHECK (stage IN ('awaiting_copy','copied','drafted','completed')),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+`,
 }];

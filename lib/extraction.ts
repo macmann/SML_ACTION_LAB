@@ -265,30 +265,64 @@ export async function extract(bytes: Buffer, format: Format) {
   }
 }
 
-export async function extractTable(bytes: Buffer, format: "csv" | "xlsx"): Promise<string[][]> {
+export type TableOptions = { sheet?: string; headerRow?: number; inspect?: boolean };
+export type SheetData = { names: string[]; rows: string[][]; rowsAvailable: number; sample: string[][]; missingFormulaValues: number; cachedFormulaValues: number };
+
+export async function extractTable(bytes: Buffer, format: "csv" | "xlsx", options: TableOptions = {}): Promise<SheetData> {
+  let rows: string[][];
+  let names = ["CSV"];
+  let missingFormulaValues = 0;
+  let cachedFormulaValues = 0;
   if (format === "csv") {
     let count = 0;
-    return parse(textFile(bytes), {
-      max_record_size: 64 * 1024,
+    rows = parse(textFile(bytes), {
+      max_record_size: 64 * 1024, relax_column_count: true,
       on_record(row: string[]) {
         if (++count > 300 || row.length > 256) throw new DocumentError("The table exceeds analysis limits.");
         return row;
       },
     });
-  }
-  const book = await workbook(await officeArchive(bytes));
-  const sheets = book.worksheets.filter((sheet) => sheet.actualRowCount > 0);
-  if (sheets.length !== 1) throw new DocumentError("Choose a workbook with one nonempty sheet, or upload the desired sheet as CSV.");
-  const rows: string[][] = [];
-  sheets[0].eachRow((row) => {
-    if (rows.length === 300) throw new DocumentError("The table exceeds analysis limits.");
-    const values: string[] = Array.from({ length: row.cellCount }, () => "");
-    row.eachCell((cell, col) => {
-      const raw = cell.value;
-      if (typeof raw === "number" || typeof raw === "string" || typeof raw === "boolean") values[col - 1] = String(raw);
-      else if (cell.type !== ExcelJS.ValueType.Formula) values[col - 1] = cell.text;
+    if (options.sheet && options.sheet !== "CSV") throw new DocumentError("CSV only has one sheet.");
+  } else {
+    const book = await workbook(await officeArchive(bytes));
+    const sheets = book.worksheets.filter((sheet) => sheet.actualRowCount > 0);
+    names = sheets.map((sheet) => sheet.name);
+    if (!names.length) throw new DocumentError("The workbook has no nonempty sheets.");
+    if (!options.sheet && sheets.length !== 1) {
+      if (options.inspect) return { names, rows: [], rowsAvailable: 0, sample: [], missingFormulaValues, cachedFormulaValues };
+      throw new DocumentError("Select a sheet in the manual spreadsheet analyzer.");
+    }
+    const sheet = options.sheet ? sheets.find((sheet) => sheet.name === options.sheet) : sheets[0];
+    if (!sheet) throw new DocumentError("The selected sheet does not exist.");
+    rows = [];
+    const decimal = (value: string | number | boolean | Date | null | undefined) =>
+      value instanceof Date ? value.toISOString().slice(0, 10) : value == null ? "" : String(value);
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber > 300) throw new DocumentError("The table exceeds the 300-row analysis limit.");
+      while (rows.length < rowNumber - 1) rows.push([]);
+      const values: string[] = Array.from({ length: row.cellCount }, () => "");
+      row.eachCell((cell, col) => {
+        const raw = cell.value;
+        if (cell.type === ExcelJS.ValueType.Formula) {
+          const result = cell.result;
+          if (result == null || typeof result === "object" && !(result instanceof Date)) missingFormulaValues++;
+          else { cachedFormulaValues++; values[col - 1] = decimal(result); }
+        } else if (typeof raw === "number" || typeof raw === "string" || typeof raw === "boolean" || raw instanceof Date) {
+          values[col - 1] = decimal(raw);
+        } else values[col - 1] = cell.text;
+      });
+      rows.push(values);
     });
-    rows.push(values);
-  });
-  return rows;
+  }
+  if (rows.length > 300) throw new DocumentError("The table exceeds the 300-row analysis limit.");
+  const selected = rows.slice((options.headerRow ?? 1) - 1);
+  const maximumColumns = selected[0]?.length ?? 0;
+  if (!options.inspect && (!maximumColumns || selected.slice(1).some((row) => row.length > maximumColumns))) {
+    throw new DocumentError("Select the header row with a column label for each populated column.");
+  }
+  return {
+    names, rows: options.inspect ? [] : [selected[0], ...selected.slice(1).filter((row) => row.some((cell) => cell.trim()))],
+    rowsAvailable: rows.length, sample: rows.slice(0, 8).map((row) => row.slice(0, 20).map((cell) => cell.slice(0, 100))),
+    missingFormulaValues, cachedFormulaValues,
+  };
 }

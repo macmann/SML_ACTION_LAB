@@ -127,3 +127,28 @@ Provider attestation requires a compatible gateway and an operator-pinned public
 ### Limits and next phase
 
 The Cloud machine lacked LibreOffice and rejected bubblewrap namespace initialization. Successful native DOCX-to-PDF conversion has not been verified. The default image supports DOCX edits and PDFKit drafts without that capability. DOCX editing remains limited to predictable templates and PDFKit drafts use ASCII text. The next phase can expand invoice workflows and verify native conversion on a deployment that supports the isolated runtime. [Document automation](document-automation.md)
+
+## Phase 6 — spreadsheets and business workspace
+
+- Added sheet, header-row and column selection for CSV and XLSX, cached-formula warnings, decimal aggregation and currency-separated charts. The v1 tool uses the same analyzer under its existing contract.
+- Added manual task and note CRUD, evidence-backed invoice imports and verification, confirmed invoice status changes, expense records and follow-up tasks.
+- Added authenticated XLSX, CSV and PDF exports for tasks, outstanding invoices and expenses. CSV text is neutralized for spreadsheet formula injection.
+- Added a manual invoice-copy, email-draft and follow-up workflow. Each step requires its own approval. The writer receives verified invoice details only, and the app sends no email.
+- Added migration 4. Earlier migrations and the generated v1 tool registry are unchanged.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run contracts:check` | Passed. |
+| `npm test` | 23 passed, including malformed worksheet rejection, exact decimals and duplicate-header selection. |
+| `NEXT_TELEMETRY_DISABLED=1 npm run build` | Passed. |
+| `docker compose config --quiet` | Passed. |
+| `COMPOSE_FILE="$PWD/compose.yaml:<temporary-override>" npm run test:integration` | Passed against disposable PostgreSQL and HTTPS fixtures. Verified all ten v1 actions, no-match search, missing and mixed currencies, formula-cache warnings, CRUD, invoice verification, download content, workflow rollback and approval replay. |
+| `npm --cache /tmp/slm-npm audit` | Zero reported vulnerabilities. |
+
+Headless Chromium verified task creation and editing, note creation, a confirmed unpaid transition and independent currency charts at 320 and 1280 CSS pixels.
+
+### Limits and next phase
+
+Apply migration 4 before using the business pages. Legacy invoice records need verification before they enter outstanding totals. Business lists show up to 200 recent records per type. PDFs use ASCII text and XLSX and CSV remain available for other scripts. No live model or email service was contacted. Later phases can extend pagination, record export filters and accounting integrations. [Business workflows](business-workflows.md)
