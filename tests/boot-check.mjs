@@ -58,13 +58,18 @@ assert.equal(liveness.status, 200);
 assert.deepEqual(await liveness.json(), { status: "alive" });
 const passwordFile = "/app/data/tmp/smoke-password";
 
-if (process.argv.includes("persisted")) {
+if (process.argv.includes("database-offline")) {
+  const cookie = sessionFrom(await submit("/login", { password: await readFile(passwordFile, "utf8") }), "/assistant");
+  assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).status, 200);
+  assert.equal((await visit("/api/documents", { headers: { Cookie: cookie } })).status, 503);
+  console.log("Administrator sign-in and Settings remained available during a PostgreSQL outage.");
+} else if (process.argv.includes("persisted")) {
   await readiness("ready", "configured", "skipped");
   assert.equal((await visit("/assistant")).headers.get("location"), "/login");
   const password = await readFile(passwordFile, "utf8");
   const cookie = sessionFrom(await submit("/login", { password }), "/assistant");
   const { settings } = await store.load();
-  assert.equal(settings.databaseGeneration, 2);
+  assert.equal(settings.databaseGeneration, 4);
   assert.ok((await store.decrypt("database", settings.database)).includes("/replacement"));
   assert.equal(settings.preferences.timezone, "Europe/Berlin");
   const recovered = randomBytes(24).toString("base64url");
@@ -72,8 +77,9 @@ if (process.argv.includes("persisted")) {
   assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).headers.get("location"), "/login");
   assert.notEqual((await submit("/login", { password })).status, 303);
   assert.ok(sessionFrom(await submit("/login", { password: recovered }), "/assistant"));
+  await writeFile(passwordFile, recovered, { mode: 0o600 });
   console.log("Admin and encrypted settings survived restart, and console recovery revoked the session.");
-} else {
+} else if (!process.argv.includes("agent") && !process.argv.some((argument) => argument.startsWith("documents"))) {
   await readiness("unclaimed");
   for (const path of ["/", "/assistant", "/documents", "/tasks", "/invoices", "/model-arena", "/logs", "/settings"]) {
     const response = await visit(path);
@@ -103,7 +109,7 @@ if (process.argv.includes("persisted")) {
   const providerKey = process.env.SLM_TEST_PROVIDER_KEY;
   assert.ok(providerKey, "The model server requires a generated fixture key");
   assert.ok(dbPassword, "The test database requires a generated fixture password");
-  const dbUrl = "postgresql://slm_fixture:" + dbPassword + "@db-fixture:5432/";
+  const dbUrl = "postgresql://slm_app:" + dbPassword + "@db-fixture:5432/";
   const suffix = "?sslmode=disable";
   const save = async (operation, fields = {}) => {
     const result = await submit("/settings", fields, { cookie, operation });

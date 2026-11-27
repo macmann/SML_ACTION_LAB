@@ -40,8 +40,17 @@ for attempt in {1..30}; do
   sleep 1
 done
 docker exec "$project-db" createdb -U slm_fixture replacement
+docker exec -i "$project-db" sh -c 'psql --quiet -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v secret="$POSTGRES_PASSWORD"' <<'SQL'
+CREATE ROLE slm_app LOGIN PASSWORD :'secret';
+ALTER DATABASE fixture OWNER TO slm_app;
+ALTER DATABASE replacement OWNER TO slm_app;
+SQL
 export SLM_TEST_PROVIDER_KEY
 SLM_TEST_PROVIDER_KEY="$(openssl rand -hex 24)"
+openssl genpkey -algorithm ED25519 -out "$fixture_dir/model-key.pem"
+export SLM_TEST_MODEL_PUBLIC_KEY SLM_TEST_SCHEMA_HASH
+SLM_TEST_MODEL_PUBLIC_KEY="$(openssl pkey -in "$fixture_dir/model-key.pem" -pubout)"
+SLM_TEST_SCHEMA_HASH="$(node --input-type=module -e 'import {schemaHash} from "./lib/tool-registry.mjs"; process.stdout.write(schemaHash)')"
 cp tests/provider-fixture.mjs "$fixture_dir/provider.mjs"
 docker run -d --name "$project-provider" --network "${project}_default" --network-alias model-fixture \
   --mount "type=bind,src=$fixture_dir,dst=/fixture,readonly" -e SLM_TEST_PROVIDER_KEY \
@@ -52,9 +61,18 @@ for attempt in {1..20}; do
   sleep 1
 done
 "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD -e SLM_TEST_PROVIDER_KEY app node --input-type=module - < tests/boot-check.mjs
+cat tests/document-fixtures.mjs tests/boot-check.mjs tests/documents-integration.mjs |
+  "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD app node --input-type=module - documents
 "${compose[@]}" restart app
 "${compose[@]}" up --no-build --wait --wait-timeout 90
+cat tests/document-fixtures.mjs tests/boot-check.mjs tests/documents-integration.mjs |
+  "${compose[@]}" exec -T app node --input-type=module - documents-persisted
 "${compose[@]}" exec -T app node --input-type=module - persisted < tests/boot-check.mjs
+cat tests/boot-check.mjs tests/agent-integration.mjs |
+  "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD -e SLM_TEST_PROVIDER_KEY -e SLM_TEST_MODEL_PUBLIC_KEY -e SLM_TEST_SCHEMA_HASH \
+    app node --input-type=module - agent
+docker stop "$project-db" >/dev/null
+"${compose[@]}" exec -T app node --input-type=module - database-offline < tests/boot-check.mjs
 
 # Reuse the exact image with an existing volume deliberately made inaccessible.
 image="$(docker inspect --format '{{.Image}}' "$("${compose[@]}" ps -q app)")"

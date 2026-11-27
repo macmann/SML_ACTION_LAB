@@ -1,6 +1,7 @@
 import { SettingsForm } from "@/components/settings-form";
 import { currentAdmin } from "@/lib/auth";
 import { requireAdmin } from "@/lib/access";
+import { schemaHash, schemaVersion } from "@/lib/tool-registry.mjs";
 import { defaultPreferences, roles, settingsFrom } from "@/lib/settings";
 
 export const metadata = { title: "Settings" };
@@ -41,6 +42,12 @@ export default async function SettingsPage() {
             <span>Confirm replacement. Existing data stays in the original database. No data is copied or migrated.</span>
           </label>}
         </SettingsForm>
+        {settings.database && <SettingsForm operation="migrate" revision={revision} submit="Run workspace migrations">
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="dedicated" required className="mt-1" />
+            <span>I confirm this is a dedicated database with a restricted application login.</span>
+          </label>
+        </SettingsForm>}
       </Panel>
 
       {settings.database && (
@@ -78,6 +85,17 @@ export default async function SettingsPage() {
         </Panel>;
       })}
 
+      {settings.distil && <Panel title="Distil routing profile">
+        <p className="text-sm text-[var(--muted)]">Import JSON metadata for the exact configured model. An operator-pinned Ed25519 key allows compatible endpoints to attest each routing response.</p>
+        <p className="text-sm wrap-anywhere">Schema {schemaVersion} · {schemaHash}</p>
+        {settings.routingProfile && <p className="text-sm">Metadata imported for {settings.routingProfile.modelId}.</p>}
+        <SettingsForm operation="profile" revision={revision} submit="Import routing metadata">
+          <label className="grid gap-1">Model metadata JSON
+            <textarea name="metadata" className={inputClass} rows={5} maxLength={16000} required autoComplete="off" spellCheck={false} />
+          </label>
+        </SettingsForm>
+      </Panel>}
+
       <Panel title="Administrator password">
         <SettingsForm operation="password" revision={revision} submit="Change password">
           <label className="grid gap-1">Current password
@@ -102,7 +120,7 @@ export default async function SettingsPage() {
             </select>
           </label>
           <label className="grid gap-1">Maximum upload size (MiB)
-            <input className={inputClass} name="uploadMiB" type="number" required min={1} max={256} defaultValue={prefs.uploadMiB} />
+            <input className={inputClass} name="uploadMiB" type="number" required min={1} max={64} defaultValue={Math.min(64, prefs.uploadMiB)} />
           </label>
           <label className="grid gap-1">Requests per minute
             <input className={inputClass} name="requestsPerMinute" type="number" required min={1} max={120} defaultValue={prefs.requestsPerMinute} />

@@ -5,6 +5,8 @@ import { currentAdmin, requireSameOrigin } from "@/lib/auth";
 import { store } from "@/lib/bootstrap.mjs";
 import { preferences, roles, settingsFrom } from "@/lib/settings";
 import { testDatabase, testProvider } from "@/lib/probes";
+import { closeDatabase, databaseLane, migrateWorkspace, WorkspaceError } from "@/lib/database";
+import { importedProfile } from "@/lib/model-profile";
 import { revalidatePath } from "next/cache";
 
 const value = (form: FormData, field: string) => {
@@ -20,7 +22,23 @@ export async function updateSettings(_previous: string, form: FormData) {
   if (value(form, "revision") !== String(state.revision)) return "Settings changed. Reload before saving.";
   const operation = value(form, "operation");
   try {
-    if (operation === "database") {
+    if (operation === "migrate") {
+      if (form.get("dedicated") !== "on") return "Confirm that this database is dedicated to SLM Action Lab.";
+      await migrateWorkspace();
+      return "Workspace migrations applied.";
+    }
+    if (operation === "profile") {
+      const raw = value(form, "metadata");
+      if (!settings.distil || !raw || raw.length > 16_000) return "Enter metadata for the configured Distil model.";
+      let profile;
+      try { profile = importedProfile.safeParse(JSON.parse(raw)); }
+      catch { return "Import a JSON object with the Distil model metadata."; }
+      if (!profile.success || profile.data.modelId !== settings.distil.model) {
+        return "Metadata must match the configured Distil model and v1 contract.";
+      }
+      if (profile.data.thinking === "on" && !settings.distil.custom) return "Thinking metadata requires a compatible custom endpoint.";
+      settings.routingProfile = profile.data;
+    } else if (operation === "database") {
       const input = value(form, "url");
       const old = settings.database ? await store.decrypt("database", settings.database) : "";
       const candidate = input || old;
@@ -46,7 +64,7 @@ export async function updateSettings(_previous: string, form: FormData) {
         uploadMiB: Number(value(form, "uploadMiB")), requestsPerMinute: Number(value(form, "requestsPerMinute")),
         shareDocuments: form.get("shareDocuments") === "on",
       });
-      if (!parsed.success) return "Check the timezone, speech choice and numeric limits.";
+      if (!parsed.success || parsed.data.uploadMiB > 64) return "Check the timezone, speech choice and numeric limits.";
       settings.preferences = parsed.data;
     } else {
       const role = z.enum(roles).safeParse(operation);
@@ -56,6 +74,7 @@ export async function updateSettings(_previous: string, form: FormData) {
       const old = settings[name];
       if (value(form, "remove") === "on") {
         delete settings[name];
+        if (name === "distil") delete settings.routingProfile;
         if (name === "distil" && settings.providerChoice === "configured") delete settings.providerChoice;
       } else {
         const endpoint = value(form, "endpoint") || (old ? await store.decrypt(name + ".endpoint", old.endpoint) : "");
@@ -79,13 +98,23 @@ export async function updateSettings(_previous: string, form: FormData) {
           key: key ? await store.encrypt(name, key) : undefined,
           model, custom, privateNetwork,
         };
-        if (name === "distil") settings.providerChoice = "configured";
+        if (name === "distil") {
+          if (endpoint !== previousEndpoint || model !== old?.model) delete settings.routingProfile;
+          settings.providerChoice = "configured";
+        }
       }
     }
-    if (!await store.saveSettings(state.revision, state.admin.epoch, settings)) {
+    const save = () => store.saveSettings(state.revision, state.admin.epoch, settings);
+    const saved = await databaseLane(async () => {
+      if (!await save()) return false;
+      if (operation === "database") await closeDatabase();
+      return true;
+    });
+    if (!saved) {
       return "The session or settings changed during testing. Reload and retry.";
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof WorkspaceError) return error.message;
     return "The settings were not saved. Check the values, endpoint policy, connectivity and credentials, then retry.";
   }
   revalidatePath("/settings");
