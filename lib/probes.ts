@@ -75,23 +75,32 @@ export async function testDatabase(value: string) {
   }
 }
 
-export async function testProvider(endpoint: string, model: string, key: string, custom: boolean, privateNetwork: boolean) {
+type Transport = { endpoint: string; key: string; custom: boolean; privateNetwork: boolean };
+type ProviderRequest = { path: string; body?: object; headers?: Record<string, string>; timeout?: number };
+
+export async function providerJson(provider: Transport, input: ProviderRequest): Promise<unknown> {
+  const { endpoint, key, custom, privateNetwork } = provider;
   const url = new URL(endpoint);
   const host = hostname(url);
   if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash ||
       (!custom && (host !== "api.openai.com" || url.port || url.pathname.replace(/\/$/, "") !== "/v1")) ||
       (privateNetwork && !custom)) throw new Error();
   const { address, family } = await resolve(host, privateNetwork);
-  const modelUrl = new URL(url);
-  modelUrl.pathname = url.pathname.replace(/\/+$/, "") + "/models/" + encodeURIComponent(model);
-  await new Promise<void>((resolve, reject) => {
-    const probe = request(modelUrl, {
-      method: "GET",
+  url.pathname = url.pathname.replace(/\/+$/, "") + input.path;
+  const body = input.body ? JSON.stringify(input.body) : undefined;
+  return new Promise<unknown>((resolve, reject) => {
+    const probe = request(url, {
+      method: body ? "POST" : "GET",
       agent: false,
       family,
       lookup: (_host, _options, callback) => callback(null, address, family),
-      headers: key ? { Authorization: "Bearer " + key, Accept: "application/json" } : { Accept: "application/json" },
-      signal: AbortSignal.timeout(timeout),
+      headers: {
+        Accept: "application/json",
+        ...(key ? { Authorization: "Bearer " + key } : {}),
+        ...(body ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) } : {}),
+        ...input.headers,
+      },
+      signal: AbortSignal.timeout(input.timeout ?? timeout),
     }, (response) => {
       if (response.statusCode !== 200) {
         response.destroy();
@@ -101,22 +110,23 @@ export async function testProvider(endpoint: string, model: string, key: string,
       const chunks: Buffer[] = [];
       let bytes = 0;
       response.on("error", reject);
+      response.on("aborted", () => reject(new Error()));
       response.on("data", (chunk: Buffer) => {
         bytes += chunk.length;
-        if (bytes > 64 * 1024) response.destroy(new Error());
+        if (bytes > 96 * 1024) response.destroy(new Error());
         else chunks.push(chunk);
       });
       response.on("end", () => {
-        try {
-          const payload = JSON.parse(Buffer.concat(chunks).toString("utf8"));
-          if (payload.id !== model) throw new Error();
-          resolve();
-        } catch {
-          reject(new Error());
-        }
+        try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8"))); }
+        catch { reject(new Error()); }
       });
     });
     probe.on("error", reject);
-    probe.end();
+    probe.end(body);
   });
+}
+
+export async function testProvider(endpoint: string, model: string, key: string, custom: boolean, privateNetwork: boolean) {
+  const result = await providerJson({ endpoint, key, custom, privateNetwork }, { path: "/models/" + encodeURIComponent(model) });
+  if (!result || typeof result !== "object" || !("id" in result) || result.id !== model) throw new Error();
 }

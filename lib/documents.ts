@@ -4,7 +4,7 @@ import { store } from "./bootstrap.mjs";
 import { withDatabase, workspaceId, WorkspaceError } from "./database";
 import { cleanupOriginals, readOriginal, removeOriginal, writeOriginal } from "./document-files";
 import { DocumentIndex, type Metadata, type SearchRow } from "./document-search";
-import { DocumentError, fileType, mediaTypes } from "./extraction";
+import { DocumentError, fileType, mediaTypes, type Section } from "./extraction";
 import { extractIsolated } from "./document-worker";
 import { defaultPreferences, settingsFrom } from "./settings";
 
@@ -20,7 +20,7 @@ function toEntry(row: Row): SearchRow {
     ordinal: ordinal ?? -1, reference: reference ?? "", text: text ?? "" };
 }
 
-type Workspace = { namespace: string; generation: number; index: DocumentIndex; size: number; reconciledAt: number };
+export type Workspace = { namespace: string; generation: number; index: DocumentIndex; size: number; reconciledAt: number };
 const globalState = globalThis as typeof globalThis & { slmDocuments?: Workspace };
 
 async function reconcile(workspace: Workspace) {
@@ -57,11 +57,11 @@ async function initialized(pool: pg.Pool, generation: number) {
   return rebuilt;
 }
 
-function useDocuments<T>(run: (workspace: Workspace, pool: pg.Pool) => Promise<T>) {
+export function useDocuments<T>(run: (workspace: Workspace, pool: pg.Pool) => Promise<T>) {
   return withDatabase(async (pool, generation) => run(await initialized(pool, generation), pool));
 }
 
-function metadataFor(workspace: Workspace, id: string) {
+export function metadataFor(workspace: Workspace, id: string) {
   const metadata = workspace.index.documents.get(id);
   if (!metadata) throw new WorkspaceError("Document not found.", 404);
   return metadata;
@@ -114,32 +114,13 @@ export function uploadDocument(request: Request, metadata: { filename: string; t
       if (error instanceof DocumentError) throw new WorkspaceError(error.message, 422);
       throw error;
     }
-    if (index.records.size + Math.max(1, sections.length) > maximum.sections ||
-        index.characters + sections.reduce((n, section) => n + section.text.length, 0) > maximum.characters) {
-      throw new WorkspaceError("The workspace index capacity has been reached.", 413);
-    }
-    const id = randomUUID();
-    const uploadedAt = new Date();
-    const mediaType = mediaTypes[format];
-    const extraction = sections.length ? "extracted" : "no_text";
+    const document = prepareDocument(workspace, randomUUID(), metadata, mediaTypes[format], bytes, sections);
+    const id = document.id;
     const client = await pool.connect();
     let commitStarted = false;
     try {
       await client.query("BEGIN");
-      await client.query(`INSERT INTO slm_workspace.documents
-        (id, filename, title, tags, document_date, uploaded_at, media_type, size_bytes, extraction_status)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-        [id, metadata.filename, metadata.title, metadata.tags, metadata.documentDate, uploadedAt, mediaType, bytes.length, extraction]);
-      if (sections.length) {
-        await client.query(`INSERT INTO slm_workspace.document_contents (document_id, ordinal, reference, body)
-          SELECT $1::uuid, (n - 1)::int, reference, body
-          FROM unnest($2::text[], $3::text[]) WITH ORDINALITY AS s(reference, body, n)`,
-          [id, sections.map((section) => section.reference), sections.map((section) => section.text)]);
-      }
-      await client.query("INSERT INTO slm_workspace.document_versions (document_id, version, sha256) VALUES ($1, 1, $2)",
-        [id, createHash("sha256").update(bytes).digest("hex")]);
-      await writeOriginal(namespace, id, bytes);
-      await writeOriginal(namespace, id, Buffer.from(JSON.stringify({ extraction, sections })), "artifacts");
+      await insertDocument(client, namespace, document, bytes, sections);
       commitStarted = true;
       await client.query("COMMIT");
     } catch (error) {
@@ -151,13 +132,60 @@ export function uploadDocument(request: Request, metadata: { filename: string; t
     } finally {
       client.release();
     }
-    const document = { ...metadata, id, uploadedAt: uploadedAt.toISOString(), mediaType,
-      size: bytes.length, extraction, attached: false } satisfies Metadata;
-    index.add(sections.length ? sections.map((section, ordinal) => ({ metadata: document, ...section, ordinal }))
-      : [{ metadata: document, ordinal: -1, reference: "", text: "" }]);
-    workspace.size += bytes.length;
+    recordDocument(workspace, document, sections);
     return document;
   });
+}
+
+type NewMetadata = Pick<Metadata, "filename" | "title" | "tags" | "documentDate">;
+
+export function prepareDocument(workspace: Workspace, id: string, metadata: NewMetadata,
+  mediaType: string, bytes: Buffer, sections: Section[]): Metadata {
+  const { index } = workspace;
+  if (index.documents.size >= maximum.documents || workspace.size + bytes.length > maximum.files ||
+      index.records.size + Math.max(1, sections.length) > maximum.sections ||
+      index.characters + sections.reduce((n, section) => n + section.text.length, 0) > maximum.characters) {
+    throw new WorkspaceError("The workspace document or index capacity has been reached.", 413);
+  }
+  return {
+    ...metadata, id, uploadedAt: new Date().toISOString(), mediaType, size: bytes.length,
+    extraction: sections.length ? "extracted" : "no_text", attached: false,
+  };
+}
+
+export async function insertDocument(client: pg.PoolClient, namespace: string,
+  document: Metadata, bytes: Buffer, sections: Section[]) {
+  const { id, filename, title, tags, documentDate, uploadedAt, mediaType, extraction } = document;
+  await client.query(`INSERT INTO slm_workspace.documents
+    (id, filename, title, tags, document_date, uploaded_at, media_type, size_bytes, extraction_status)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [id, filename, title, tags, documentDate, uploadedAt, mediaType, bytes.length, extraction]);
+  if (sections.length) {
+    await client.query(`INSERT INTO slm_workspace.document_contents (document_id, ordinal, reference, body)
+      SELECT $1::uuid, (n - 1)::int, reference, body
+      FROM unnest($2::text[], $3::text[]) WITH ORDINALITY AS s(reference, body, n)`,
+    [id, sections.map((section) => section.reference), sections.map((section) => section.text)]);
+  }
+  await client.query("INSERT INTO slm_workspace.document_versions (document_id, version, sha256) VALUES ($1, 1, $2)",
+    [id, createHash("sha256").update(bytes).digest("hex")]);
+  await writeOriginal(namespace, id, bytes);
+  await writeOriginal(namespace, id, Buffer.from(JSON.stringify({ extraction, sections })), "artifacts");
+}
+
+export function recordDocument(workspace: Workspace, document: Metadata, sections: Section[]) {
+  workspace.index.add(sections.length ? sections.map((section, ordinal) => ({ metadata: document, ...section, ordinal }))
+    : [{ metadata: document, ordinal: -1, reference: "", text: "" }]);
+  workspace.size += document.size;
+}
+
+export function invalidateDocuments() {
+  globalState.slmDocuments = undefined;
+}
+
+export async function documentSections(pool: pg.Pool | pg.PoolClient, id: string) {
+  const { rows } = await pool.query<Section>(
+    "SELECT reference, body AS text FROM slm_workspace.document_contents WHERE document_id = $1 ORDER BY ordinal", [id]);
+  return rows;
 }
 
 export function listDocuments(options: Parameters<DocumentIndex["find"]>[0]) {
@@ -170,9 +198,7 @@ export function listDocuments(options: Parameters<DocumentIndex["find"]>[0]) {
 export function previewDocument(id: string) {
   return useDocuments(async (workspace, pool) => {
     const metadata = metadataFor(workspace, id);
-    const { rows: sections } = await pool.query<{ reference: string; text: string }>(
-      "SELECT reference, body AS text FROM slm_workspace.document_contents WHERE document_id = $1 ORDER BY ordinal", [id]);
-    return { ...metadata, sections };
+    return { ...metadata, sections: await documentSections(pool, id) };
   });
 }
 
@@ -186,7 +212,7 @@ export function downloadDocument(id: string) {
   });
 }
 
-async function removeDocumentFiles(namespace: string, id: string) {
+export async function removeDocumentFiles(namespace: string, id: string) {
   for (const storage of ["files", "artifacts"] as const) {
     await removeOriginal(namespace, id, storage).catch(() => {});
   }

@@ -80,4 +80,46 @@ CREATE TABLE slm_workspace.application_preferences (
   key text PRIMARY KEY, value jsonb NOT NULL
 );
 `,
+}, {
+  version: 2,
+  sql: `
+ALTER TABLE slm_workspace.inference_logs
+  ADD COLUMN mode text,
+  ADD COLUMN routing_profile jsonb,
+  ADD COLUMN writing_profile jsonb,
+  ADD COLUMN provider_identity text,
+  ADD COLUMN writer_identity text,
+  ADD COLUMN predicted_tool text,
+  ADD COLUMN validation_status text,
+  ADD COLUMN execution_status text,
+  ADD COLUMN routing_ms integer,
+  ADD COLUMN execution_ms integer,
+  ADD COLUMN writer_ms integer,
+  ADD COLUMN writer_status text,
+  ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE slm_workspace.approvals
+  ADD COLUMN idempotency_key uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  ADD COLUMN schema_version text NOT NULL DEFAULT 'legacy',
+  ADD COLUMN proposal_hash text NOT NULL DEFAULT 'legacy',
+  ADD COLUMN database_generation integer NOT NULL DEFAULT 0,
+  ADD COLUMN expires_at timestamptz NOT NULL DEFAULT now(),
+  ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(),
+  ADD COLUMN outcome jsonb,
+  ADD CONSTRAINT approvals_status CHECK (status IN ('pending','approved','executing','succeeded','failed','expired'));
+CREATE UNIQUE INDEX tool_execution_single_claim ON slm_workspace.tool_executions(approval_id) WHERE approval_id IS NOT NULL;
+CREATE FUNCTION slm_workspace.guard_approval() RETURNS trigger LANGUAGE plpgsql AS $guard$
+BEGIN
+  IF (NEW.id, NEW.idempotency_key, NEW.request, NEW.schema_version, NEW.proposal_hash, NEW.database_generation, NEW.expires_at, NEW.created_at)
+    IS DISTINCT FROM (OLD.id, OLD.idempotency_key, OLD.request, OLD.schema_version, OLD.proposal_hash, OLD.database_generation, OLD.expires_at, OLD.created_at)
+  THEN RAISE EXCEPTION 'Immutable approval proposal'; END IF;
+  IF NOT ((OLD.status = 'pending' AND NEW.status IN ('approved','expired')) OR
+    (OLD.status = 'approved' AND NEW.status IN ('executing','expired')) OR
+    (OLD.status = 'executing' AND NEW.status IN ('succeeded','failed')))
+  THEN RAISE EXCEPTION 'Invalid approval transition'; END IF;
+  RETURN NEW;
+END
+$guard$;
+CREATE TRIGGER approval_guard BEFORE UPDATE ON slm_workspace.approvals
+FOR EACH ROW EXECUTE FUNCTION slm_workspace.guard_approval();
+`,
 }];

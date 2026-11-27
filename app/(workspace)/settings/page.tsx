@@ -1,6 +1,7 @@
 import { SettingsForm } from "@/components/settings-form";
 import { currentAdmin } from "@/lib/auth";
 import { requireAdmin } from "@/lib/access";
+import { schemaHash, schemaVersion } from "@/lib/tool-registry.mjs";
 import { defaultPreferences, roles, settingsFrom } from "@/lib/settings";
 
 export const metadata = { title: "Settings" };
@@ -83,6 +84,17 @@ export default async function SettingsPage() {
           </SettingsForm>}
         </Panel>;
       })}
+
+      {settings.distil && <Panel title="Distil routing profile">
+        <p className="text-sm text-[var(--muted)]">Import JSON metadata for the exact configured model. An operator-pinned Ed25519 key allows compatible endpoints to attest each routing response.</p>
+        <p className="text-sm wrap-anywhere">Schema {schemaVersion} · {schemaHash}</p>
+        {settings.routingProfile && <p className="text-sm">Metadata imported for {settings.routingProfile.modelId}.</p>}
+        <SettingsForm operation="profile" revision={revision} submit="Import routing metadata">
+          <label className="grid gap-1">Model metadata JSON
+            <textarea name="metadata" className={inputClass} rows={5} maxLength={16000} required autoComplete="off" spellCheck={false} />
+          </label>
+        </SettingsForm>
+      </Panel>}
 
       <Panel title="Administrator password">
         <SettingsForm operation="password" revision={revision} submit="Change password">

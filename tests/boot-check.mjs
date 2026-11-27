@@ -79,7 +79,7 @@ if (process.argv.includes("database-offline")) {
   assert.ok(sessionFrom(await submit("/login", { password: recovered }), "/assistant"));
   await writeFile(passwordFile, recovered, { mode: 0o600 });
   console.log("Admin and encrypted settings survived restart, and console recovery revoked the session.");
-} else if (!process.argv.some((argument) => argument.startsWith("documents"))) {
+} else if (!process.argv.includes("agent") && !process.argv.some((argument) => argument.startsWith("documents"))) {
   await readiness("unclaimed");
   for (const path of ["/", "/assistant", "/documents", "/tasks", "/invoices", "/model-arena", "/logs", "/settings"]) {
     const response = await visit(path);

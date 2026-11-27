@@ -8,7 +8,7 @@ The entrypoint validates ownership and permissions before starting Next.js. The 
 
 An operator creates a 256-bit pairing token in a private container terminal. The snapshot records its SHA-256 hash and 15-minute expiry. Successful claim writes the administrator and removes the token in one commit. Pairing, login, and password change use persistent attempt counters with five attempts per minute per operation. Account passwords use scrypt with N=131072, r=8, p=1 and a random salt.
 
-The HTTP-only, Secure, SameSite=Strict session cookie is signed with the persistent session secret. Login and password rotation change the epoch so earlier cookies fail. Logout revokes the current epoch. Every mutation checks its origin against the request host as seen through the trusted ingress. The app serves no functional API at this phase. Future APIs must authenticate the administrator and apply origin protection to writes.
+The HTTP-only, Secure, SameSite=Strict session cookie is signed with the persistent session secret. Login and password rotation change the epoch so earlier cookies fail. Logout revokes the current epoch. Every mutation checks its origin against the request host as seen through the trusted ingress. Document and assistant APIs authenticate the administrator and apply origin protection to writes.
 
 ## Credentials and settings
 
@@ -31,6 +31,12 @@ A separate Node process extracts text with a 25-second deadline and a bounded Ja
 MiniSearch indexes filename, title, tags and section text with BM25+. It keeps whole punctuated identifiers and groups section matches by document. Date filtering explicitly selects uploaded UTC day or the supplied document date. Results include one bounded snippet and reference per document. The in-memory index is rebuilt from PostgreSQL on restart or switch and updated after committed uploads and deletions. Active attachments are database-backed and scoped to the current workspace. There are no vectors or provider dependencies in search.
 
 Uploads default to 25 MiB each and cannot exceed 64 MiB. TXT and CSV inputs are capped at 4 MiB. CSV permits up to 300 rows. PDFs permit up to 250 pages. Office ZIP limits are 256 entries, 8 MiB per entry and 48 MiB expanded overall, with decompression-ratio and XML-structure checks. Extracted output is capped at 300 sections and 180,000 characters per document. The workspace permits 1,500 documents, 12,000 searchable sections, four million text characters and 2 GiB of originals. Searches return at most 50 results.
+
+## Assistant execution
+
+The inference gateway sends the fixed v1 routing prompt, one user message and the generated ten-tool action profile plus two control functions. It validates a single native function response with validators compiled from the registry. Routing and writing use independent profile snapshots. Only an explicitly selected writer can receive bounded excerpts from a source selected for that turn. Model-only and comparison requests write inference evaluation records without executing tools.
+
+Strict mutation planning requires an attested response and produces a pending approval. The claim transaction uses a unique idempotency key and records the executing state before any effect. Document drafts reuse the document staging and reconciliation pipeline. Task inserts or draft inserts commit in the same transaction as the final execution status. The execution path checks the current profile, schema and database generation before claiming the proposal. See the precise wire protocol and approval behavior. [Agent contract](agent-contract.md)
 
 ## Persistent paths
 

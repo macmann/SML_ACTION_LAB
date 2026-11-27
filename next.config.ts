@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 export default {
   output: "standalone",
-  serverExternalPackages: ["pdfjs-dist", "exceljs", "jszip", "saxes", "yauzl", "csv-parse"],
+  serverExternalPackages: ["pdfjs-dist", "exceljs", "jszip", "saxes", "yauzl", "csv-parse", "pdfkit"],
   outputFileTracingIncludes: {
     "/api/documents": [
       "./scripts/extract-document.mjs", "./lib/extraction.ts",

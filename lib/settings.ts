@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { importedProfile } from "./model-profile";
 import { store } from "./bootstrap.mjs";
 
 export const roles = ["distil", "comparison", "writer"] as const;
@@ -26,6 +27,7 @@ const schema = z.object({
   providerChoice: z.enum(["configured", "skipped"]).optional(),
   distil: provider.optional(), comparison: provider.optional(), writer: provider.optional(),
   preferences: preferences.optional(),
+  routingProfile: importedProfile.optional(),
 });
 
 export type Settings = z.infer<typeof schema>;

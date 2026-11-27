@@ -81,3 +81,27 @@ The new dependencies are pinned in the lockfile. MiniSearch, ExcelJS, yauzl, csv
 ### Limits and next phase
 
 No OCR, rich Office rendering or automatic document-date inference is included. DOCX extraction uses safe XML for structural references. Mammoth is planned for rich rendering. The document index assumes the single app instance and its own database writes. PostgreSQL and the persistent volume must be backed up together. Live Coolify ingress and deployment remain unverified. The next phase can connect active document selections to assistant conversations and tool execution with explicit data-sharing controls.
+
+## Phase 4 — tool contracts, inference and approvals
+
+- Added the v1.0.0 registry with ten action tools and two controls, generated runtime validators and OpenAI and training schemas. CI checks the generated artifact.
+- Added an OpenAI-compatible routing gateway with fixed prompts, independent writer settings, optional signed model identity, bounded requests and redacted audit records. Only an explicitly selected source can be shown to a writer with per-turn consent.
+- Added deterministic local tools, writer drafts, immutable approvals and atomic idempotent execution for task creation, draft duplication and literal conversion. Strict mode blocks unverified mutations. Comparison and model-only modes have no tool side effects.
+- Added the Assistant, approvals and Logs views. Run workspace migrations after upgrading. Migration 1 is unchanged and migration 2 adds approval invariants and inference audit fields.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` and `npm run contracts:check` | Passed. |
+| `npm test` | 18 passed. Covers schema parity, malformed native calls, exact decimals, ambiguous fields, and signed-response tampering and replay. |
+| `NEXT_TELEMETRY_DISABLED=1 npm run build` | Passed. |
+| `docker compose config --quiet` | Passed. |
+| `COMPOSE_FILE="$PWD/compose.yaml:<temporary-override>" npm run test:integration` | Passed all ten tools with PostgreSQL and a disposable signed HTTPS fixture. Covers unverified and fallback refusal, unsafe responses, prompt isolation, source consent, timeouts, expiry, duplicate approvals, generated artifacts and audit redaction. |
+| `npm --cache /tmp/slm-npm audit` | Zero reported vulnerabilities. AJV, PDFKit and the PDFKit types are pinned and use MIT. |
+
+Headless Chromium verified setup, assistant mode selection, outage messaging and layout at 320 and 1280 CSS pixels. The Docker dependency installation used a temporary Cloud CA. Production Compose has no change to its credential requirements.
+
+### Limits and next phase
+
+Provider attestation requires a compatible gateway and an operator-pinned public key. The fixture verifies the protocol, and no live provider or paid request was used. Drafts return text and send no email. Persistent multi-turn conversations and broader business workflows remain for later phases. [Agent contract](agent-contract.md)

@@ -26,6 +26,12 @@ Open **Documents** to upload PDF, DOCX, TXT, XLSX or CSV files. Each batch can i
 
 The app defaults to 25 MiB per upload with a 64 MiB ceiling. Text and CSV inputs are limited to 4 MiB. Additional parser and workspace limits are listed in [the architecture](docs/architecture.md). Back up PostgreSQL together with the data volume to preserve originals and extracted artifacts.
 
+## Run the assistant
+
+Apply workspace migrations again after upgrading to Phase 4. Configure Distil in Settings and import JSON routing metadata if available. The Assistant offers strict execution, Distil model-only, and comparison model-only modes. Use Documents to attach sources, then explicitly select them in the turn. Drafts and summaries also require a configured writer and document-sharing consent.
+
+Strict mutations require a compatible endpoint that signs responses with an operator-pinned key and a separate approval in the Assistant. Unverified endpoints can still perform strict read-only tools. Model-only modes display validated predictions without running tools. See the exact tool definitions, setup requirements, and gateway attestation format. [Agent contract](docs/agent-contract.md)
+
 ## Develop locally
 
 Use Node 24.22.3 and npm from that distribution.
@@ -40,6 +46,7 @@ Open localhost on port 3000. The local server initializes the ignored `data/` di
 ```sh
 npm run lint
 npm run typecheck
+npm run contracts:check
 npm test
 npm run build
 npm run test:integration

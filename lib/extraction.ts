@@ -182,7 +182,7 @@ function wordSections(content: Buffer, add: (reference: string, text: string) =>
   });
 }
 
-async function sheetSections(entries: Map<string, Buffer>, add: (reference: string, text: string) => void) {
+async function workbook(entries: Map<string, Buffer>) {
   if (!entries.has("xl/workbook.xml")) throw new DocumentError("The XLSX workbook is missing.");
   if ([...entries.keys()].filter((name) => /^xl\/worksheets\/[^/]+\.xml$/.test(name)).length > 24) {
     throw new DocumentError("The workbook contains too many worksheets.");
@@ -194,6 +194,11 @@ async function sheetSections(entries: Map<string, Buffer>, add: (reference: stri
   const book = new ExcelJS.Workbook();
   const normalized = await zip.generateAsync({ type: "uint8array" });
   await book.xlsx.load(normalized.buffer as ArrayBuffer);
+  return book;
+}
+
+async function sheetSections(entries: Map<string, Buffer>, add: (reference: string, text: string) => void) {
+  const book = await workbook(entries);
   book.eachSheet((sheet) => {
     sheet.eachRow((row) => {
       const cells: string[] = [];
@@ -258,4 +263,32 @@ export async function extract(bytes: Buffer, format: Format) {
     if (error instanceof DocumentError) throw error;
     throw new DocumentError("The file could not be parsed. It may be invalid, encrypted, or unsupported.");
   }
+}
+
+export async function extractTable(bytes: Buffer, format: "csv" | "xlsx"): Promise<string[][]> {
+  if (format === "csv") {
+    let count = 0;
+    return parse(textFile(bytes), {
+      max_record_size: 64 * 1024,
+      on_record(row: string[]) {
+        if (++count > 300 || row.length > 256) throw new DocumentError("The table exceeds analysis limits.");
+        return row;
+      },
+    });
+  }
+  const book = await workbook(await officeArchive(bytes));
+  const sheets = book.worksheets.filter((sheet) => sheet.actualRowCount > 0);
+  if (sheets.length !== 1) throw new DocumentError("Choose a workbook with one nonempty sheet, or upload the desired sheet as CSV.");
+  const rows: string[][] = [];
+  sheets[0].eachRow((row) => {
+    if (rows.length === 300) throw new DocumentError("The table exceeds analysis limits.");
+    const values: string[] = Array.from({ length: row.cellCount }, () => "");
+    row.eachCell((cell, col) => {
+      const raw = cell.value;
+      if (typeof raw === "number" || typeof raw === "string" || typeof raw === "boolean") values[col - 1] = String(raw);
+      else if (cell.type !== ExcelJS.ValueType.Formula) values[col - 1] = cell.text;
+    });
+    rows.push(values);
+  });
+  return rows;
 }
