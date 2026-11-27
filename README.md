@@ -26,6 +26,10 @@ Open **Documents** to upload PDF, DOCX, TXT, XLSX or CSV files. Each batch can i
 
 The app defaults to 25 MiB per upload with a 64 MiB ceiling. Text and CSV inputs are limited to 4 MiB. Additional parser and workspace limits are listed in [the architecture](docs/architecture.md). Back up PostgreSQL together with the data volume to preserve originals and extracted artifacts.
 
+## Edit document versions
+
+Run workspace migrations after upgrading to Phase 5. Open a document preview to edit a supported DOCX template or create a PDF invoice draft. Review changes and approve the version before downloading it. Evidence summaries require explicit source selection and sharing consent. [Document automation](docs/document-automation.md)
+
 ## Run the assistant
 
 Apply workspace migrations again after upgrading to Phase 4. Configure Distil in Settings and import JSON routing metadata if available. The Assistant offers strict execution, Distil model-only, and comparison model-only modes. Use Documents to attach sources, then explicitly select them in the turn. Drafts and summaries also require a configured writer and document-sharing consent.

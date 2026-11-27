@@ -32,6 +32,7 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
   const [mode, setMode] = useState<Mode>("strict");
   const [active, setActive] = useState<string[]>([]);
   const [writer, setWriter] = useState(false);
+  const [experimental, setExperimental] = useState(false);
   const [share, setShare] = useState(false);
   const [result, setResult] = useState<Response>();
   const [error, setError] = useState("");
@@ -58,7 +59,7 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
     setResult(undefined);
     try {
       const answer = await jsonRequest<Response>("/api/agent", post({ id: crypto.randomUUID(),
-        request, mode, active, writer: mode === "strict" && writer, share: mode === "strict" && writer && share }));
+        request, mode, active, writer: mode === "strict" && (writer || experimental), experimental: mode === "strict" && experimental, share: mode === "strict" && (writer || experimental) && share }));
       setResult(answer);
       await refresh();
     } catch (failure) { setError((failure as Error).message); }
@@ -102,11 +103,15 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
         </label>)}
       </fieldset>
       {mode === "strict" && writerModel && <label className="flex gap-2">
-        <input type="checkbox" checked={writer} onChange={(event) => setWriter(event.target.checked)} />Use {writerModel} as writer for drafts and summaries
+        <input type="checkbox" checked={writer} onChange={(event) => { setWriter(event.target.checked); if (event.target.checked) setExperimental(false); }} />Use {writerModel} as writer for drafts and summaries
       </label>}
-      {mode === "strict" && writer && <label className="flex gap-2">
+      {mode === "strict" && routingConfigured && <label className="flex gap-2">
+        <input type="checkbox" checked={experimental} onChange={(event) => { setExperimental(event.target.checked); if (event.target.checked) setWriter(false); }} />
+        Use the configured SLM for experimental evidence summaries
+      </label>}
+      {mode === "strict" && (writer || experimental) && <label className="flex gap-2">
         <input type="checkbox" checked={share && shareEnabled} disabled={!shareEnabled}
-          onChange={(event) => setShare(event.target.checked)} />Share selected document excerpts for this turn{!shareEnabled && " (enable in Preferences first)"}
+          onChange={(event) => setShare(event.target.checked)} />Send extracted text from the selected document to the chosen provider for this turn. Binary files are never sent.{!shareEnabled && " (enable in Preferences first)"}
       </label>}
       <Button disabled={busy || !available || !context} className="justify-self-start">{busy ? "Working…" : "Run turn"}</Button>
     </form>

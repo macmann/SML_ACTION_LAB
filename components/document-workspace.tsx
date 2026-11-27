@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { TemplateEditor } from "./template-editor";
 import type { Metadata } from "@/lib/document-search";
 import { Button } from "@/components/ui/button";
 
@@ -224,6 +225,7 @@ export function DocumentWorkspace({ maxMiB }: { maxMiB: number }) {
           <h2 className="text-xl font-semibold">{preview.title}</h2>
           <Button variant="outline" onClick={() => setPreview(null)}>Close preview</Button>
         </div>
+        <TemplateEditor key={preview.id} id={preview.id} docx={preview.mediaType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"} />
         {preview.sections.length ? preview.sections.map(({ reference, text }, index) => (
           <div key={index} className="border-t border-[var(--line)] pt-2">
             <h3 className="font-semibold">{reference}</h3><p className="whitespace-pre-wrap">{text}</p>

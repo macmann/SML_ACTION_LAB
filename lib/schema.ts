@@ -122,4 +122,18 @@ $guard$;
 CREATE TRIGGER approval_guard BEFORE UPDATE ON slm_workspace.approvals
 FOR EACH ROW EXECUTE FUNCTION slm_workspace.guard_approval();
 `,
+}, {
+  version: 3,
+  sql: `
+CREATE TABLE slm_workspace.document_derivations (
+  document_id uuid PRIMARY KEY,
+  source_id uuid NOT NULL,
+  source_hash text NOT NULL,
+  version integer NOT NULL CHECK (version > 1),
+  UNIQUE(source_id, version)
+);
+CREATE TABLE slm_workspace.template_invoice_numbers (
+  number text PRIMARY KEY
+);
+`,
 }];

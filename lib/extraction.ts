@@ -110,7 +110,7 @@ function checkXml(text: string, name: string) {
   });
 }
 
-async function officeArchive(bytes: Buffer) {
+export async function officeArchive(bytes: Buffer) {
   if (bytes.readUInt32LE(0) !== 0x04034b50) throw new DocumentError("The Office file is not an unencrypted ZIP archive.");
   const archive = await fromBufferPromise(bytes, {
     lazyEntries: true, autoClose: false, validateEntrySizes: true, strictFileNames: true,

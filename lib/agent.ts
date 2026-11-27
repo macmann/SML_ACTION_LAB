@@ -4,11 +4,11 @@ import { Clarification, grounded, performAction, type Args } from "./agent-actio
 import { useDocuments } from "./documents";
 import { approvalList, propose } from "./approvals";
 import { withDatabase, workspaceId, WorkspaceError } from "./database";
-import { configuredProfile, routeTurn, writeContent, type Mode } from "./inference";
+import { configuredProfile, routeTurn, summarize, summaryProfile, writeContent, type Mode } from "./inference";
 import { settingsFrom } from "./settings";
 import { controlNames, hash, mutationNames, normalizeCall } from "./tool-registry.mjs";
 
-export type Turn = { id: string; request: string; mode: Mode; active: string[]; writer: boolean; share: boolean };
+export type Turn = { id: string; request: string; mode: Mode; active: string[]; writer: boolean; experimental?: boolean; share: boolean };
 type Audit = {
   identity?: string; predicted?: string; validation?: string; execution?: string;
   routingMs?: number; executionMs?: number; writerMs?: number; writerStatus?: string;
@@ -99,32 +99,38 @@ export async function runTurn(turn: Turn) {
         if (current.id !== profile.id) throw new WorkspaceError("The model profile changed. Start a new turn.", 409);
         const proposal = await propose(pool, generation, turn.id, profile.id, result.proposal);
         await saveAudit(pool, turn.id, { execution: "pending", executionMs: Date.now() - processingStarted });
-        return { proposal };
+        return { proposal, preview: result.preview };
       }
       return result;
     });
-    if ("proposal" in action) return { ...common, status: "pending", approval: action.proposal };
+    if ("proposal" in action) return { ...common, status: "pending", approval: action.proposal, result: action.preview };
     if ("draft" in action) {
       if (!turn.writer || !turn.share || !settings.preferences?.shareDocuments || !turn.active.includes(action.draft.sourceId)) {
         throw new Clarification("Select the source as an active document, select the writer, and allow document sharing in Preferences and for this turn.");
       }
-      const writer = configuredProfile(settings, "writer");
+      const role = turn.experimental ? "distil" : "writer";
+      const chosen = configuredProfile(settings, role);
+      const writer = action.draft.sections ? summaryProfile(chosen) : chosen;
+      if (turn.experimental && !action.draft.sections) throw new Clarification("Experimental SLM writing is available for evidence summaries.");
       const latest = settingsFrom(await store.load());
       ensureGeneration(latest.databaseGeneration ?? 1, generation);
-      if (!latest.preferences?.shareDocuments || !latest.writer || hash(latest.writer) !== hash(settings.writer)) {
+      if (!latest.preferences?.shareDocuments || !latest[role] || hash(latest[role]) !== hash(settings[role])) {
         throw new Clarification("Writer settings or document-sharing preferences changed. Start a new turn.");
       }
       const start = Date.now();
       await update({ writerStatus: "running", writingProfile: writer, writerIdentity: "unverified" });
-      let draft;
-      try { draft = await writeContent(latest, writer, action.draft); }
+      let result;
+      try {
+        result = action.draft.sections ? await summarize(latest, writer, action.draft.instruction, action.draft.sections) :
+          { draft: await writeContent(latest, writer, action.draft) };
+      }
       catch (error) {
         await update({ writerStatus: error instanceof WorkspaceError && error.status === 504 ? "timeout" : "failed", writerMs: Date.now() - start });
         throw error;
       }
       await update({ writerStatus: "succeeded", writerMs: Date.now() - start, execution: "succeeded",
         executionMs: Date.now() - processingStarted });
-      return { ...common, status: "completed", result: { draft, writer: writer.model, writerIdentity: "unverified" } };
+      return { ...common, status: "completed", result: { ...result, sourceId: action.draft.sourceId, writer: writer.model, writerIdentity: "unverified" } };
     }
     await update({ execution: "succeeded", executionMs: Date.now() - processingStarted });
     return { ...common, status: "completed", result: action.result };

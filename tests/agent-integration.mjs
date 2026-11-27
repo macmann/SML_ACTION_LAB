@@ -1,6 +1,6 @@
 
 const { default: pg } = await import("pg");
-const { randomUUID } = await import("node:crypto");
+const { createHash, randomUUID } = await import("node:crypto");
 const agentCookie = sessionFrom(await submit("/login", { password: await readFile(passwordFile, "utf8") }), "/assistant");
 const authHeaders = { Cookie: agentCookie, Origin: root };
 const pgClient = new pg.Client({
@@ -88,16 +88,26 @@ try {
 
   assert.ok((await run("fixture search QZ-381")).result.total >= 2);
   const extracted = (await run("fixture extract")).result.fields;
-  assert.deepEqual(extracted.invoice_id, { status: "found", value: "QZ-381" });
+  assert.equal(extracted.invoice_id.value, "QZ-381");
+  assert.equal(extracted.invoice_id.evidence[0].evidence, "Invoice ID: QZ-381");
   assert.equal(extracted.customer.status, "missing");
   assert.ok((await run("fixture compare")).result.leftOnlyCount > 0);
   assert.deepEqual((await run("fixture analyze")).result.groups, [{ group: "North", value: "0.3" }]);
   assert.equal((await run("fixture draft", { writer: true })).status, "clarification");
   assert.equal((await run("fixture writer without selected source", { active: [], writer: true, share: true })).status, "clarification");
   assert.equal((await run("fixture draft", { writer: true, share: true })).result.draft, "Fictional writer draft.");
-  assert.equal((await run("fixture summary", { writer: true, share: true })).result.draft, "Fictional writer draft.");
+  const summary = (await run("fixture summary", { writer: true, share: true })).result;
+  assert.equal(summary.excerpts[0].quote, "UNTRUSTED-DOCUMENT-DATA");
+  assert.equal(summary.coverage.complete, true);
+  const long = await addSource("Long fixture.txt", Array.from({ length: 20 }, () =>
+    "UNTRUSTED-DOCUMENT-DATA " + "Long word ".repeat(120)).join("\n\n"));
+  assert.equal((await visit("/api/documents/" + long, { method: "PATCH",
+    headers: { ...authHeaders, "Slm-Attachment": "true" } })).status, 204);
+  const longSummary = (await run("fixture long summary", { writer: true, share: true, active: [long] })).result;
+  assert.equal(longSummary.coverage.complete, false);
+  assert.ok(longSummary.coverage.coveredSections > 3 && longSummary.coverage.coveredSections < longSummary.coverage.totalSections);
   await run("fixture malicious writer", { writer: true, share: true }, 502);
-  assert.deepEqual(await count(), before, "Writer output and embedded instructions must never run tools");
+  assert.deepEqual(await count(), { ...before, documents: before.documents + 1 }, "Writer output and embedded instructions must never run tools");
 
   const proposed = await run("fixture tasks");
   assert.equal(proposed.status, "pending");
@@ -143,5 +153,54 @@ try {
     row.routing_profile.schemaHash === metadata.schemaHash && row.routing_profile.systemPrompt));
   assert.ok(!JSON.stringify(rows).includes("UNTRUSTED-DOCUMENT-DATA"), "Logs must not contain document contents");
   assert.ok(!JSON.stringify(rows).includes(process.env.SLM_TEST_PROVIDER_KEY), "Logs must not contain provider credentials");
+  const { default: JSZip } = await import("jszip");
+  const word = new JSZip();
+  word.file("[Content_Types].xml", '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  word.file("_rels/.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  word.file("word/document.xml", '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +
+    ['Nov|ember', 'Invoice number: {{invoice_number}}', 'Invoice date: {{invoice_date}}', 'Due date: {{due_date}}', 'Period: {{period}}', 'Payment terms: {{payment_terms}}']
+      .map((line) => "<w:p>" + line.split("|").map((run) => "<w:r><w:t>" + run + "</w:t></w:r>").join("") + "</w:p>").join("") +
+    '</w:body></w:document>');
+  const original = await word.generateAsync({ type: "nodebuffer" });
+  const template = await addSource("Invoice fixture.docx", original,
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  const templateRequest = (input, propose = false, previewHash) => visit("/api/documents/" + template + "/template", {
+    method: "POST", headers: { ...authHeaders, "Content-Type": "application/json" },
+    body: JSON.stringify({ input, propose, previewHash }),
+  });
+  const invoice = { number: "FIXTURE-2025-12", date: "2025-12-20", dueDate: "2026-01-19", period: "2025-12", termsDays: 30 };
+  const input = { output: "docx", invoice, replacements: [{ find: "November", replace: "December", count: 1 }] };
+  assert.equal((await templateRequest({ ...input, invoice: { ...invoice, termsDays: 31 } })).status, 400);
+  const previewResponse = await templateRequest(input);
+  assert.equal(previewResponse.status, 200, await previewResponse.clone().text());
+  const preview = await previewResponse.json();
+  assert.ok(preview.preview.some((item) => item.before === "November" && item.after === "December"));
+  assert.ok(preview.preview.some((item) => item.after === "Due date: 2026-01-19"));
+  assert.equal((await templateRequest(input, true, "0".repeat(64))).status, 409);
+  const templated = await (await templateRequest(input, true, preview.previewHash)).json();
+  const version = await (await approve(templated.approval)).json();
+  assert.equal(version.status, "succeeded", JSON.stringify(version.outcome));
+  assert.equal(version.outcome.version, 2);
+  const getOriginal = async (id) => Buffer.from(await (await visit("/api/documents/" + id + "/download", { headers: authHeaders })).arrayBuffer());
+  assert.equal(createHash("sha256").update(await getOriginal(template)).digest("hex"), createHash("sha256").update(original).digest("hex"));
+  const generated = await JSZip.loadAsync(await getOriginal(version.outcome.document.id));
+  assert.match(await generated.file("word/document.xml").async("string"), /FIXTURE-2025-12/);
+  assert.equal((await templateRequest(input)).status, 409);
+
+  const invoicePdf = { output: "pdf", replacements: [], invoice: { ...invoice, number: "FIXTURE-PDF-01" },
+    invoicePdf: { customer: "Fictional buyer", description: "Fixture work", amount: "17.25", currency: "EUR" } };
+  const pdfPreview = await (await templateRequest(invoicePdf)).json();
+  const pdfPlan = await (await templateRequest(invoicePdf, true, pdfPreview.previewHash)).json();
+  const invoicePdfResult = await (await approve(pdfPlan.approval)).json();
+  assert.equal(invoicePdfResult.status, "succeeded", JSON.stringify(invoicePdfResult.outcome));
+  assert.equal((await getOriginal(invoicePdfResult.outcome.document.id)).subarray(0, 5).toString(), "%PDF-");
+
+  const office = { ...input, output: "pdf", invoice: { ...invoice, number: "FIXTURE-CONVERT-01" } };
+  const officePreview = await (await templateRequest(office)).json();
+  const officePlan = await (await templateRequest(office, true, officePreview.previewHash)).json();
+  const missingOffice = await (await approve(officePlan.approval)).json();
+  assert.equal(missingOffice.status, "failed");
+  assert.match(missingOffice.outcome.message, /requires LibreOffice and bubblewrap/);
+  console.log("Template preview, immutable original, invoice rollover, unique number, PDFKit draft and missing Office passed.");
   console.log("Agent contracts, all ten tools, identity checks, model-only mode, writer consent, timeouts, approvals, replay and audit passed.");
 } finally { await pgClient.end(); }

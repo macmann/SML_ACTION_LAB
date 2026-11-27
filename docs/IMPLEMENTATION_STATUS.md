@@ -105,3 +105,25 @@ Headless Chromium verified setup, assistant mode selection, outage messaging and
 ### Limits and next phase
 
 Provider attestation requires a compatible gateway and an operator-pinned public key. The fixture verifies the protocol, and no live provider or paid request was used. Drafts return text and send no email. Persistent multi-turn conversations and broader business workflows remain for later phases. [Agent contract](agent-contract.md)
+
+## Phase 5 — document intelligence and automation
+
+- Added evidence summaries with section-aligned chunks, verifiable quotes, deterministic reduction and explicit coverage. Configured writers or the deliberately selected experimental SLM receive extracted text only after consent.
+- Added evidence-backed field extraction and a deterministic document and field diff.
+- Added a provider-independent DOCX editor with split-run replacement, exact match counts, before-and-after previews, and immutable approved versions. Added explicit invoice fields, case-insensitive number registration, due-date validation and PDFKit invoice drafts.
+- Added a sandboxed native Office converter path that refuses to run without its required binaries or isolation. The default image does not package native Office tools.
+- Added workspace migration 3 for document-lineage and invoice-number records. The trained v1 registry is unchanged.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run contracts:check` | Passed. |
+| `npm test` | 22 passed. Includes split-run and table/header/footer edits, untouched media, missing and duplicate matches, unsupported markup, missing converter and fabricated citation rejection. |
+| `NEXT_TELEMETRY_DISABLED=1 npm run build` | Passed. |
+| `docker compose config --quiet` | Passed. |
+| `COMPOSE_FILE="$PWD/compose.yaml:<temporary-override>" npm run test:integration` | Passed against disposable PostgreSQL and HTTPS fixtures. Verified short and partial-coverage summaries, authenticated preview and approval, November-to-December edits with a January due date, original SHA-256 preservation, number uniqueness, PDFKit draft downloads and visible failure without LibreOffice. |
+
+### Limits and next phase
+
+The Cloud machine lacked LibreOffice and rejected bubblewrap namespace initialization. Successful native DOCX-to-PDF conversion has not been verified. The default image supports DOCX edits and PDFKit drafts without that capability. DOCX editing remains limited to predictable templates and PDFKit drafts use ASCII text. The next phase can expand invoice workflows and verify native conversion on a deployment that supports the isolated runtime. [Document automation](document-automation.md)

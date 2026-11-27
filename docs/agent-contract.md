@@ -9,7 +9,7 @@ Arguments are closed objects. Omit unknown optional values. Top-level names and 
 | Action | Arguments | Behavior |
 | --- | --- | --- |
 | `search_documents` | `query` text, optional `file_type`, optional `date_filter` | Returns up to 12 local matches with snippets and a total. |
-| `search_and_summarize` | `query` reference, optional `focus` text, optional `summary_style` of `brief`, `bullets`, `detailed` | Resolves one selected source and uses the explicitly chosen writer to compose a summary. |
+| `search_and_summarize` | `query` reference, optional `focus` text, optional `summary_style` of `brief`, `bullets`, `detailed` | Resolves one selected source and uses the explicitly chosen writer to select verified section evidence. |
 | `duplicate_document` | `source_query` reference, `target_period` as `YYYY-MM`, Boolean `preserve_amount` and `preserve_customer` | When both flags are true, proposes an extracted-text copy labeled with the requested period. Original values remain intact. For changed values use explicit replacements. |
 | `extract_document_fields` | `source_query` reference, `fields` of 1–8 distinct names | Reads explicit labels and reports missing or ambiguous values. Allowed fields are `invoice_id`, `invoice_date`, `due_date`, `amount`, `currency`, `customer`, `supplier`, `reference`. |
 | `compare_documents` | `left_query`, `right_query` references | Compares distinct sets of extracted sections and returns bounded differences. |
@@ -44,3 +44,5 @@ An attestation verifies an assertion from the operator-pinned signer for that re
 A verified mutation resolves its source and produces an immutable pending plan. The proposal binds the tool version and hash, routing profile, database generation, source ID and resolved parameters. It expires after 15 minutes and carries the original turn UUID as its idempotency key. The administrator reviews the exact parameters and explicitly approves the hash. A transaction advances pending to approved to executing and creates a unique execution record. The tool effect and final status commit together. Terminal replay reads the outcome. Interrupted executions can be marked failed after two minutes and are never retried. The v2 migration enforces proposal immutability and allowed status transitions.
 
 Inference records contain exact system prompt and profile settings, action name, validation status, execution status, verified or unverified identity, and separate routing, writing and execution times. They exclude request text, document text, tool arguments, raw provider responses and credentials. Approval records separately retain the bounded parameters needed for review. No email is sent and assistant-generated files remain separate from their source.
+
+Phase 5 adds chunked evidence summaries and manual version editing without changing the trained tool schema. [Document automation](document-automation.md)

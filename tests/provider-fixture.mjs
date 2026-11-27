@@ -21,6 +21,12 @@ async function complete(req, res) {
   const payload = JSON.parse(input.messages[1].content);
   if (input.messages.length !== 2 || input.messages[1].role !== "user" || input.messages[0].role !== "system") return res.writeHead(400).end();
   if (!input.tools) {
+    if (payload.sections) {
+      const section = payload.sections[0];
+      return send(res, { model: "fixture", choices: [{ finish_reason: "stop", message: {
+        role: "assistant", content: JSON.stringify([{ ref: section.id, quote: "UNTRUSTED-DOCUMENT-DATA" }]),
+      } }] });
+    }
     if (!payload.source.includes("UNTRUSTED-DOCUMENT-DATA") || payload.source.length > 8000) return res.writeHead(400).end();
     if (payload.instruction.includes("malicious")) {
       return send(res, { model: "fixture", choices: [{ finish_reason: "tool_calls", message: { role: "assistant", tool_calls: [task] } }] });
@@ -49,6 +55,7 @@ async function complete(req, res) {
     "fixture writer without selected source": [call("draft_email", { source_query: "Assistant fixture.txt", purpose: "Draft a fictional reply" })],
     "fixture draft": [call("draft_email", { source_query: "@active:1", purpose: "Draft a fictional reply", tone: "neutral" })],
     "fixture malicious writer": [call("draft_email", { source_query: "@active:1", purpose: "malicious" })],
+    "fixture long summary": [call("search_and_summarize", { query: "@active:1" })],
     "fixture summary": [call("search_and_summarize", { query: "@active:1", summary_style: "brief" })],
     "fixture duplicate 2025-02": [call("duplicate_document", { source_query: "@active:1", target_period: "2025-02", preserve_amount: true, preserve_customer: true })],
     "fixture invented period": [call("duplicate_document", { source_query: "@active:1", target_period: "2025-02", preserve_amount: true, preserve_customer: true })],

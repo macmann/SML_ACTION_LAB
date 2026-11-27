@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const input = z.strictObject({
   id: z.uuid(), request: z.string().trim().min(1).max(2000), mode: z.enum(["strict", "comparison", "model_only"]),
   active: z.array(z.uuid()).max(5).refine((ids) => new Set(ids).size === ids.length).default([]),
-  writer: z.boolean().default(false), share: z.boolean().default(false),
+  experimental: z.boolean().optional(), writer: z.boolean().default(false), share: z.boolean().default(false),
 });
 
 export async function GET() {
