@@ -5,7 +5,7 @@ SLM Action Lab is a single-admin workspace for working with documents and produc
 | Section | Current behavior | Planned scope |
 | --- | --- | --- |
 | Assistant | Opens a status page | Provider-backed requests and document actions |
-| Documents | Opens a status page | Import, conversion, local text search, and exports |
+| Documents | Private multi-file uploads, extracted previews, downloads, active attachments, deletion, and local BM25+ search | Rich previews, generated exports, and additional conversion workflows |
 | Tasks / Notes | Opens a status page | Persisted notes and task tracking |
 | Invoices | Opens a status page | Invoice records and generated documents |
 | Model Arena | Opens a status page | Administrator-selected model comparisons |

@@ -38,7 +38,7 @@ function hostname(url: URL) {
   return name;
 }
 
-export async function testDatabase(value: string) {
+export async function databaseConnectionOptions(value: string): Promise<pg.ClientConfig> {
   const url = new URL(value);
   if (!["postgres:", "postgresql:"].includes(url.protocol) || !url.username || !url.password ||
       !/^\/[^/]+$/.test(url.pathname) || url.hash ||
@@ -52,15 +52,20 @@ export async function testDatabase(value: string) {
   if (mode === "disable" && allowedAddress(address, false)) throw new Error();
   const credentials = [url.username, url.password, url.pathname.slice(1)].map(decodeURIComponent);
   if (credentials.some((field) => !field || field.includes("\0"))) throw new Error();
-  const client = new pg.Client({
+  return {
     host: address, port: Number(url.port || 5432),
     user: credentials[0], password: credentials[1], database: credentials[2],
     ssl: mode === "disable" ? false : {
       rejectUnauthorized: true, servername: isIP(host) ? undefined : host,
       checkServerIdentity: (_name, cert) => checkServerIdentity(host, cert),
     },
-    connectionTimeoutMillis: timeout, query_timeout: timeout, statement_timeout: timeout,
-  });
+    connectionTimeoutMillis: timeout, query_timeout: timeout + 1000, statement_timeout: timeout,
+    lock_timeout: 2500, idle_in_transaction_session_timeout: 10000, application_name: "slm_action_lab",
+  };
+}
+
+export async function testDatabase(value: string) {
+  const client = new pg.Client(await databaseConnectionOptions(value));
   client.on("error", () => { /* Connection errors are surfaced through the probe promise. */ });
   try {
     await client.connect();

@@ -5,6 +5,7 @@ import { currentAdmin, requireSameOrigin } from "@/lib/auth";
 import { store } from "@/lib/bootstrap.mjs";
 import { preferences, roles, settingsFrom } from "@/lib/settings";
 import { testDatabase, testProvider } from "@/lib/probes";
+import { closeDatabase, databaseLane, migrateWorkspace, WorkspaceError } from "@/lib/database";
 import { revalidatePath } from "next/cache";
 
 const value = (form: FormData, field: string) => {
@@ -20,6 +21,11 @@ export async function updateSettings(_previous: string, form: FormData) {
   if (value(form, "revision") !== String(state.revision)) return "Settings changed. Reload before saving.";
   const operation = value(form, "operation");
   try {
+    if (operation === "migrate") {
+      if (form.get("dedicated") !== "on") return "Confirm that this database is dedicated to SLM Action Lab.";
+      await migrateWorkspace();
+      return "Workspace migrations applied.";
+    }
     if (operation === "database") {
       const input = value(form, "url");
       const old = settings.database ? await store.decrypt("database", settings.database) : "";
@@ -46,7 +52,7 @@ export async function updateSettings(_previous: string, form: FormData) {
         uploadMiB: Number(value(form, "uploadMiB")), requestsPerMinute: Number(value(form, "requestsPerMinute")),
         shareDocuments: form.get("shareDocuments") === "on",
       });
-      if (!parsed.success) return "Check the timezone, speech choice and numeric limits.";
+      if (!parsed.success || parsed.data.uploadMiB > 64) return "Check the timezone, speech choice and numeric limits.";
       settings.preferences = parsed.data;
     } else {
       const role = z.enum(roles).safeParse(operation);
@@ -82,10 +88,17 @@ export async function updateSettings(_previous: string, form: FormData) {
         if (name === "distil") settings.providerChoice = "configured";
       }
     }
-    if (!await store.saveSettings(state.revision, state.admin.epoch, settings)) {
+    const save = () => store.saveSettings(state.revision, state.admin.epoch, settings);
+    const saved = operation === "database" ? await databaseLane(async () => {
+      if (!await save()) return false;
+      await closeDatabase();
+      return true;
+    }) : await save();
+    if (!saved) {
       return "The session or settings changed during testing. Reload and retry.";
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof WorkspaceError) return error.message;
     return "The settings were not saved. Check the values, endpoint policy, connectivity and credentials, then retry.";
   }
   revalidatePath("/settings");

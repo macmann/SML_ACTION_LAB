@@ -55,3 +55,29 @@ Headless Chromium verified keyboard focus, pairing, masked database input, prefe
 ### Limits and next phase
 
 Readiness reports the saved, tested setup state. It does not call remote services on health requests. Distil and custom providers use the OpenAI-compatible model metadata endpoint. Live providers, the Contabo deployment and Coolify ingress were not exercised. Document operations and PostgreSQL schema migrations remain for the next phase, alongside generation-aware pools and index rebuilds. The application has no files or logs APIs yet.
+
+## Phase 3 — database, files and document workspace
+
+- Added a lazy PostgreSQL pool capped at five connections, explicit transactional migrations with an advisory lock and checksum ledger, and the initial document and application schema. A confirmed database switch drains the prior pool and rebuilds the document index on the next workspace request.
+- Added authenticated multi-file uploads, private immutable originals and extraction artifacts, compensating file cleanup, extracted previews, downloads, active attachments, and confirmed deletion.
+- Added bounded PDF, DOCX, TXT, XLSX and CSV extraction, including page, paragraph, heading, table, sheet and cell references. Image-only PDFs report no extractable text. Office validation rejects archives with external relationships, unsafe paths, macros, encryption, XML doctypes or excessive expansion.
+- Added section-level MiniSearch BM25+ with exact punctuated identifiers, document grouping, snippets, file and tag filters, date-field selection and sorting. Manual search works independently of inference.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| `npm run lint` and `npm run typecheck` | Passed. |
+| `npm test` | 14 passed. Fixtures cover all five formats, image-only PDFs, failed parsing, malicious Office archives, exact identifiers, ambiguous matches and independent date filters. |
+| `NEXT_TELEMETRY_DISABLED=1 npm run build` | Passed. Docker integration exercised the standalone parser process and packaged PDF resources. |
+| `docker compose config --quiet` | Passed. |
+| `COMPOSE_FILE="$PWD/compose.yaml:<temporary-override>" npm run test:integration` | Passed with the managed Cloud CA mounted only for npm install. Verified repeat migrations, authorization, private downloads and artifacts, exact search, index restart and switch, stale-file cleanup, deletion, and administrator availability during an outage. |
+| `npm --cache /tmp/slm-npm audit` | Zero reported vulnerabilities. The ExcelJS UUID dependency is pinned to the patched 11.1.1 release. |
+
+Headless Chromium passed setup, migrations, upload, search, preview, attachment and confirmed deletion against PostgreSQL. The document workspace fit at 320 and 1280 CSS pixels.
+
+The new dependencies are pinned in the lockfile. MiniSearch, ExcelJS, yauzl, csv-parse and the yauzl types use MIT. PDF.js uses Apache-2.0, JSZip offers MIT or GPL-3.0-or-later, and saxes uses ISC. Installed engine requirements are compatible with Node 24.
+
+### Limits and next phase
+
+No OCR, rich Office rendering or automatic document-date inference is included. DOCX extraction uses safe XML for structural references. Mammoth is planned for rich rendering. The document index assumes the single app instance and its own database writes. PostgreSQL and the persistent volume must be backed up together. Live Coolify ingress and deployment remain unverified. The next phase can connect active document selections to assistant conversations and tool execution with explicit data-sharing controls.

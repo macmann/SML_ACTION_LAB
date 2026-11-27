@@ -29,7 +29,7 @@ const schema = z.object({
 });
 
 export type Settings = z.infer<typeof schema>;
-export const defaultPreferences = { timezone: "UTC", speech: "off", uploadMiB: 32, requestsPerMinute: 12, shareDocuments: false } as const;
+export const defaultPreferences = { timezone: "UTC", speech: "off", uploadMiB: 25, requestsPerMinute: 12, shareDocuments: false } as const;
 
 export function settingsFrom(state: { settings: unknown }): Settings {
   return schema.parse(state.settings);
