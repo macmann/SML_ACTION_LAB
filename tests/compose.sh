@@ -23,7 +23,7 @@ chmod 0644 "$fixture_dir/cert.pem"
 export COMPOSE_FILE="${COMPOSE_FILE:-$PWD/compose.yaml}"
 fixture_image="node:24.22.3-bookworm-slim@sha256:873f586f3794f52281bd039bf02c048a0be08fde619338f9941bad1eb6b34530"
 "${compose[@]}" build
-image="$(docker image inspect --format '{{.Id}}' "$project-app")"
+image="$(docker image inspect --format '{{.Id}}' "$("${compose[@]}" config --images)")"
 docker run --rm --network none --cpus 2 --memory 3g --entrypoint sh "$image" -ec '
   node scripts/speech-smoke.mjs 3221225472
   for cli in /opt/slm-speech/bin/whisper-cli /opt/slm-speech/piper/piper /usr/bin/libreoffice; do "$cli" --help >/dev/null 2>&1; done'
