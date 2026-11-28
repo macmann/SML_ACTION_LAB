@@ -142,7 +142,8 @@ docker stop "$project-db" >/dev/null
 # Reuse the exact image with an existing volume deliberately made inaccessible.
 "${compose[@]}" exec -T -u 0 app sh -c 'chown root:root /app/data'
 "${compose[@]}" rm --stop --force app
-if timeout 20s docker run --rm --name "$project-inaccessible" --mount "type=volume,src=${project}_slm_data,dst=/app/data" "$image" > /tmp/"$project".log 2>&1; then
+docker create --name "$project-inaccessible" --mount "type=volume,src=${project}_slm_data,dst=/app/data" "$image" >/dev/null
+if timeout 60s docker start --attach "$project-inaccessible" > /tmp/"$project".log 2>&1; then
   echo "Startup unexpectedly succeeded with an inaccessible existing volume." >&2
   exit 1
 fi
