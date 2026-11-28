@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { importedProfile } from "./model-profile";
+import { validationModes } from "./probes";
 import { store } from "./bootstrap.mjs";
 
 export const roles = ["distil", "comparison", "writer"] as const;
@@ -8,7 +9,7 @@ export type Role = typeof roles[number];
 const envelope = z.object({ version: z.literal(1), nonce: z.string(), data: z.string(), tag: z.string() });
 const provider = z.object({
   endpoint: envelope, model: z.string(), key: envelope.optional(),
-  custom: z.boolean(), privateNetwork: z.boolean(),
+  custom: z.boolean(), privateNetwork: z.boolean(), validationMode: z.enum(validationModes).optional(),
 });
 
 export const preferences = z.object({

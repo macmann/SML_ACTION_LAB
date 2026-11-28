@@ -18,6 +18,11 @@ async function complete(req, res) {
     if (raw.length > 100_000) return res.writeHead(413).end();
   }
   const input = JSON.parse(raw);
+  if (input.messages?.length === 1 && input.messages[0]?.content === "Reply with OK.") {
+    if (input.model === "fixture-empty") return send(res, { choices: [] });
+    if (!["fixture-chat", "fixture-chat-405", "fixture-chat-501"].includes(input.model)) return res.writeHead(404).end();
+    return send(res, { model: input.model, choices: [{ message: { role: "assistant", content: "OK" } }] });
+  }
   const payload = JSON.parse(input.messages[1].content);
   if (input.messages.length !== 2 || input.messages[1].role !== "user" || input.messages[0].role !== "system") return res.writeHead(400).end();
   if (!input.tools) {
@@ -96,6 +101,9 @@ createServer({
   if (req.url === "/redirect/models/fixture") {
     return res.writeHead(302, { Location: "https://model-fixture:8443/v1/models/fixture" }).end();
   }
+  if (req.url === "/v1/models/fixture-slow") return;
+  if (req.url === "/v1/models/fixture-chat-405") return res.writeHead(405).end();
+  if (req.url === "/v1/models/fixture-chat-501") return res.writeHead(501).end();
   if (req.url === "/v1/models/fixture") return send(res, { id: "fixture" });
   res.writeHead(404).end();
 }).listen(8443, "0.0.0.0");

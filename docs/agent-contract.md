@@ -29,7 +29,7 @@ Routing sends one `POST /chat/completions` with the fixed system prompt, a user 
 
 The router receives at most 2,000 request characters and five reference handles. It receives no extracted document text. A separate writer request may receive at most 8,000 characters from one explicitly selected source. Writing requires choosing the configured writer, enabling document sharing in Preferences, and consenting for the individual turn. Writer calls advertise no tools. The endpoint response must contain finished draft text. The response is rendered as text. There is no fallback model or retry.
 
-Endpoint checks use the existing HTTPS metadata probe. Inference uses the same destination policy, pinned resolved address, certificate verification and redirect rejection. DNS resolution is bounded to four seconds and the completion request to nine seconds with a 96 KiB response limit. The application enforces a rolling per-minute inference limit and at most two concurrent provider requests.
+Endpoint checks use HTTPS model discovery or one explicitly consented synthetic chat completion. Automatic mode tries discovery and can fall back to chat after HTTP 404, 405, or 501. HTTP 401 and 403 stop validation. Inference uses the same destination policy, pinned resolved address, certificate verification and redirect rejection. DNS resolution is bounded to four seconds and the completion request to nine seconds with a 96 KiB response limit. The application enforces a rolling per-minute inference limit and at most two concurrent provider requests.
 
 ## Distil metadata and identity
 
@@ -37,7 +37,7 @@ In Settings, paste plain JSON metadata for the exact configured model. Required 
 
 A compatible Distil gateway can attest native responses using a pinned Ed25519 public key. Metadata with a key requires a checkpoint digest and origin. The app sends `Slm-Challenge` with a fresh nonce and `Slm-Profile` with the profile hash. The gateway signs the UTF-8 canonical JSON object with fields `version: 1`, `challenge`, `profileId`, `model`, and `choice`. The choice is the exact sole response choice. Canonical JSON sorts object keys recursively, retains array order, and omits spaces. Return the unpadded base64url signature as top-level `slm_attestation.signature`. The effective model must match the configured ID and fallback indicators must be absent or false.
 
-An attestation verifies an assertion from the operator-pinned signer for that response. It cannot independently inspect deployed weights. An unidentified endpoint, unsigned response, invalid signature, model mismatch, or declared fallback is labeled **unverified**. A metadata probe alone does not verify a model. Strict mode blocks unverified mutations. Comparison and model-only modes validate predictions and record evaluation logs without executing tools or creating approvals.
+An attestation verifies an assertion from the operator-pinned signer for that response. It cannot independently inspect deployed weights. An unidentified endpoint, unsigned response, invalid signature, model mismatch, or declared fallback is labeled **unverified**. Settings probes establish connectivity and response compatibility. Model identity requires a per-response attestation. Strict mode blocks unverified mutations. Comparison and model-only modes validate predictions and record evaluation logs without executing tools or creating approvals.
 
 ## Approvals and audit
 

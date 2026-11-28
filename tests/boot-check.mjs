@@ -22,6 +22,12 @@ const htmlValue = (value) => value.replaceAll(/&(?:quot|amp|lt|gt|#x27);/g, (ent
 })[entity]);
 
 async function submit(path, fields, { cookie, operation, origin = root } = {}) {
+  if (path === "/settings" && operation) {
+    const tab = ["database", "migrate"].includes(operation) ? "database" :
+      operation === "password" ? "account" : operation === "preferences" ? "preferences" :
+      operation === "speech" ? "speech" : "providers";
+    path += "?tab=" + tab;
+  }
   const response = await visit(path, { headers: cookie ? { Cookie: cookie } : {} });
   assert.equal(response.status, 200);
   const page = await response.text();
@@ -156,7 +162,35 @@ if (process.argv.includes("restored")) {
   const provider = { endpoint: "https://model-fixture:8443/v1", key: providerKey, model: "fixture", custom: "on" };
   await save("distil", provider);
   assert.equal((await store.load()).settings.distil, undefined, "Private provider requires explicit opt-in");
-  await save("distil", { ...provider, privateNetwork: "on" });
+  const manual = { ...provider, privateNetwork: "on", model: "fixture-chat" };
+  assert.match(await save("distil", manual), /discovery is unavailable \(HTTP 404\)/);
+  assert.equal((await store.load()).settings.distil, undefined, "The chat probe requires consent");
+  assert.match(await save("distil", { ...manual, validationMode: "discovery", chatConsent: "on" }),
+    /Model discovery failed \(HTTP 404\)/);
+  assert.match(await save("distil", { ...manual, key: "invalid-fixture-key", chatConsent: "on" }),
+    /Model discovery failed \(HTTP 401\)/);
+  assert.match(await save("distil", { ...manual, model: "invalid model", chatConsent: "on" }), /Model ID is invalid/);
+  assert.match(await save("distil", { ...manual, model: "fixture-slow", chatConsent: "on" }), /Model discovery timed out/);
+  assert.match(await save("distil", { ...manual, model: "missing-model", chatConsent: "on" }),
+    /Chat completion test failed \(HTTP 404\)/);
+  assert.match(await save("distil", { ...manual, validationMode: "chat", key: "invalid-fixture-key", chatConsent: "on" }),
+    /Chat completion test failed \(HTTP 401\)/);
+  assert.match(await save("distil", { ...manual, validationMode: "chat" }), /Allow the chat completion test/);
+  assert.match(await save("distil", { ...manual, chatConsent: "on" }), /Settings saved/);
+  const fallbackSaved = (await store.load()).settings.distil;
+  assert.equal(fallbackSaved.model, "fixture-chat");
+  assert.equal(fallbackSaved.validationMode, "automatic");
+  assert.ok(await store.decrypt("distil", fallbackSaved.key) === providerKey);
+  for (const status of [405, 501]) {
+    assert.match(await save("distil", { ...manual, model: "fixture-chat-" + status, chatConsent: "on" }), /Settings saved/);
+  }
+  assert.match(await save("distil", { ...manual, validationMode: "chat", chatConsent: "on" }), /Settings saved/);
+  assert.equal((await store.load()).settings.distil.validationMode, "chat");
+  assert.match(await save("distil", { ...manual, model: "fixture-empty", chatConsent: "on" }),
+    /Chat completion test returned an invalid or oversized response \(HTTP 200\)/);
+  assert.equal((await store.load()).settings.distil.model, "fixture-chat");
+  await save("distil", { ...provider, privateNetwork: "on", validationMode: "discovery" });
+  assert.equal((await store.load()).settings.distil.model, "fixture");
   await readiness("ready", "configured", "configured");
   const configured = (await store.load()).settings.distil;
   assert.ok(await store.decrypt("distil", configured.key) === providerKey);
@@ -173,5 +207,5 @@ if (process.argv.includes("restored")) {
   assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).headers.get("location"), "/login");
   assert.equal((await visit("/settings", { headers: { Cookie: replacementCookie } })).status, 200);
   await writeFile(passwordFile, password, { mode: 0o600 });
-  console.log("Clean boot, claim, origin check, session rotation, database switching, TLS model validation, redirect rejection and manual mode verified.");
+  console.log("Clean boot, claim, origin check, session rotation, database switching, provider discovery and chat validation, consent, rejection details, encryption, redirect rejection and manual mode verified.");
 }

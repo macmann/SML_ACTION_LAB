@@ -4,7 +4,7 @@ import { z } from "zod";
 import { currentAdmin, requireSameOrigin } from "@/lib/auth";
 import { store } from "@/lib/bootstrap.mjs";
 import { preferences, roles, settingsFrom, speechSettings } from "@/lib/settings";
-import { testDatabase, testProvider } from "@/lib/probes";
+import { testDatabase, testProvider, ProviderValidationError, validationModes } from "@/lib/probes";
 import { closeDatabase, databaseLane, migrateWorkspace, WorkspaceError } from "@/lib/database";
 import { importedProfile } from "@/lib/model-profile";
 import { revalidatePath } from "next/cache";
@@ -21,6 +21,7 @@ export async function updateSettings(_previous: string, form: FormData) {
   const settings = settingsFrom(state);
   if (value(form, "revision") !== String(state.revision)) return "Settings changed. Reload before saving.";
   const operation = value(form, "operation");
+  let failureMessage = "Settings could not be prepared. Reload Settings and check that the app volume is accessible.";
   try {
     if (operation === "migrate") {
       if (form.get("dedicated") !== "on") return "Confirm that this database is dedicated to SLM Action Lab.";
@@ -51,7 +52,8 @@ export async function updateSettings(_previous: string, form: FormData) {
       if (old && candidate !== old && form.get("confirm") !== "on") {
         return "Confirm the database replacement. Existing data will stay in the original database.";
       }
-      await testDatabase(candidate);
+      try { await testDatabase(candidate); }
+      catch { return "PostgreSQL connection test failed. Check the URL, TLS settings, credentials and network access from the app container."; }
       settings.database = await store.encrypt("database", candidate);
       if (candidate !== old) settings.databaseGeneration = (settings.databaseGeneration ?? 0) + 1;
     } else if (operation === "skip") {
@@ -61,7 +63,7 @@ export async function updateSettings(_previous: string, form: FormData) {
       if (!settings.database || !settings.distil) return "Test and save the Distil provider first.";
       const distil = settings.distil;
       await testProvider(await store.decrypt("distil.endpoint", distil.endpoint), distil.model,
-        distil.key ? await store.decrypt("distil", distil.key) : "", distil.custom, distil.privateNetwork);
+        distil.key ? await store.decrypt("distil", distil.key) : "", distil.custom, distil.privateNetwork, distil.validationMode, form.get("chatConsent") === "on");
       settings.providerChoice = "configured";
     } else if (operation === "preferences") {
       const parsed = preferences.safeParse({
@@ -92,16 +94,18 @@ export async function updateSettings(_previous: string, form: FormData) {
         const key = form.get("clearKey") === "on" ? "" :
           providedKey || (old?.key ? await store.decrypt(name, old.key) : "");
         const model = value(form, "model");
-        if (!endpoint || endpoint.length > 2048 || key.length > 4096 || !/^[\w][\w./:-]{0,159}$/.test(model)) {
-          return "Check the endpoint, model ID and key length.";
+        if (!endpoint || endpoint.length > 2048 || key.length > 4096) {
+          return "Enter a valid HTTPS base URL and check the API key length.";
         }
         const custom = form.get("custom") === "on";
         const privateNetwork = form.get("privateNetwork") === "on";
-        await testProvider(endpoint, model, key, custom, privateNetwork);
+        const validationMode = z.enum(validationModes).safeParse(value(form, "validationMode") || "automatic");
+        if (!validationMode.success) return "Choose a supported provider validation mode.";
+        await testProvider(endpoint, model, key, custom, privateNetwork, validationMode.data, form.get("chatConsent") === "on");
         settings[name] = {
           endpoint: await store.encrypt(name + ".endpoint", endpoint),
           key: key ? await store.encrypt(name, key) : undefined,
-          model, custom, privateNetwork,
+          model, custom, privateNetwork, validationMode: validationMode.data,
         };
         if (name === "distil") {
           if (endpoint !== previousEndpoint || model !== old?.model) delete settings.routingProfile;
@@ -109,18 +113,22 @@ export async function updateSettings(_previous: string, form: FormData) {
         }
       }
     }
+    failureMessage = "Settings storage could not be updated. Check the app volume permissions and free space, then retry.";
     const save = () => store.saveSettings(state.revision, state.admin.epoch, settings);
     const saved = await databaseLane(async () => {
       if (!await save()) return false;
-      if (operation === "database") await closeDatabase();
+      if (operation === "database") {
+        failureMessage = "Database settings were saved, but the previous connection pool could not close. Retry the workspace connection.";
+        await closeDatabase();
+      }
       return true;
     });
     if (!saved) {
       return "The session or settings changed during testing. Reload and retry.";
     }
   } catch (error) {
-    if (error instanceof WorkspaceError) return error.message;
-    return "The settings were not saved. Check the values, endpoint policy, connectivity and credentials, then retry.";
+    if (error instanceof WorkspaceError || error instanceof ProviderValidationError) return error.message;
+    return failureMessage;
   }
   revalidatePath("/settings");
   return "Settings saved.";
