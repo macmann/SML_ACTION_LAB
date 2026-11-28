@@ -105,15 +105,22 @@ export function WorkspaceDiagnostics({ revision, configured }: { revision: numbe
           database: report.connectivity.target.database, login: report.connectivity.target.username, schema: report.connectivity.target.schema,
         } : null),
         check("Workspace schema usage", report.connectivity.target?.schemaExists ? report.connectivity.target.schemaUsage : null, schemaAction),
-        check("Restricted migration login", report.connectivity.target ?
-          !report.connectivity.target.elevated && !["postgres", "template0", "template1"].includes(report.connectivity.target.database) : null,
-          "Use a dedicated database and a login without cluster-wide privileges."),
-        check("Required CREATE grant", report.connectivity.target && report.migrations.pending?.length
-          ? report.connectivity.target.schemaExists ? report.connectivity.target.schemaCreate : report.connectivity.target.databaseCreate : null, schemaAction),
+        ...report.connectivity.permissions?.map(({ name, expected, actual, passed, explanation }): Check => ({
+          label: name, status: passed ? "PASS" : "FAIL",
+          value: `Expected: ${expected} · Actual: ${actual}\n${passed ? "Meets migration policy." : explanation}`,
+        })) ?? [{ label: "Restricted login permission predicates", status: "NOT TESTED" as const }],
+        check("Public schema ownership and privileges", report.connectivity.target ? {
+          literalOwner: report.connectivity.target.publicOwner,
+          effectiveOwner: report.connectivity.target.publicEffectiveOwner,
+          usage: report.connectivity.target.publicUsage, create: report.connectivity.target.publicCreate,
+          databaseOwner: report.connectivity.target.databaseOwner,
+        } : null),
         check("DDL permissions and schema ownership", report.connectivity.target ? {
           databaseCreate: report.connectivity.target.databaseCreate, schemaCreate: report.connectivity.target.schemaCreate,
-          schemaOwner: report.connectivity.target.schemaOwner, elevatedLogin: report.connectivity.target.elevated,
+          schemaOwner: report.connectivity.target.schemaOwner,
         } : null),
+        { label: "Current diagnostic failure", status: report.connectivity.failure ? "FAIL" : report.connectivity.selectOne ? "PASS" : "NOT TESTED",
+          value: report.connectivity.failure, action: dbAction },
         check("Probe duration", report.connectivity.latencyMs == null ? null : report.connectivity.latencyMs + " ms"),
         check("Last successful connection", report.connectivity.lastSuccessfulConnection),
         { label: "Last database error", status: report.connectivity.currentError ? "FAIL" : report.connectivity.lastError ? "WARNING" : report.connectivity.selectOne ? "PASS" : "NOT TESTED",

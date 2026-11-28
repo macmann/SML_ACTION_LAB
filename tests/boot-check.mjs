@@ -97,6 +97,7 @@ if (process.argv.includes("restored")) {
   assert.equal(report.database, "unavailable");
   assert.equal(report.connectivity.configured, true);
   assert.equal(report.connectivity.connected, false);
+  assert.equal(report.connectivity.failure.category, "connection_failure");
   assert.ok(report.workspace.blockers.length > 0);
   assert.equal(report.migrations.applied, null);
   console.log("Administrator sign-in and Settings remained available during a PostgreSQL outage.");
@@ -106,7 +107,7 @@ if (process.argv.includes("restored")) {
   const password = await readFile(passwordFile, "utf8");
   const cookie = sessionFrom(await submit("/login", { password }), "/assistant");
   const { settings } = await store.load();
-  assert.equal(settings.databaseGeneration, 7);
+  assert.equal(settings.databaseGeneration, 9);
   assert.ok((await store.decrypt("database", settings.database)).includes("/replacement"));
   assert.equal(settings.preferences.timezone, "Europe/Berlin");
   const recovered = randomBytes(24).toString("base64url");

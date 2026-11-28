@@ -66,7 +66,7 @@ SLM_TEST_DB_PASSWORD="$(openssl rand -hex 24)"
 POSTGRES_PASSWORD="$SLM_TEST_DB_PASSWORD" docker run -d --name "$project-db" \
   --network "${project}_default" --network-alias db-fixture \
   -e POSTGRES_USER=slm_fixture -e POSTGRES_DB=fixture -e POSTGRES_PASSWORD \
-  postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd >/dev/null
+  "${SLM_TEST_POSTGRES_IMAGE:-postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd}" >/dev/null
 for attempt in {1..30}; do
   if docker exec "$project-db" pg_isready -h 127.0.0.1 -U slm_fixture -d fixture >/dev/null; then break; fi
   sleep 1
@@ -76,6 +76,9 @@ docker exec -i "$project-db" sh -c 'psql --quiet -v ON_ERROR_STOP=1 -U "$POSTGRE
 CREATE ROLE slm_app LOGIN PASSWORD :'secret';
 CREATE ROLE slm_limited LOGIN PASSWORD :'secret';
 CREATE ROLE slm_elevated LOGIN CREATEROLE PASSWORD :'secret';
+CREATE ROLE offgrid_app LOGIN PASSWORD :'secret';
+CREATE DATABASE "OFFGRID" OWNER offgrid_app;
+GRANT pg_read_all_data TO offgrid_app;
 ALTER DATABASE fixture OWNER TO slm_app;
 ALTER DATABASE replacement OWNER TO slm_app;
 SQL

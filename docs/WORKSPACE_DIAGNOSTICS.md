@@ -46,3 +46,23 @@ The actual VPS migration failure remains undetermined. Neither an independently 
 Lint, type checking, contract verification, Compose validation, and all 29 unit tests passed. The production Docker image built and booted with an empty volume and no application environment settings. The complete Docker integration suite exited 0 with real disposable PostgreSQL 17 and a local HTTPS provider fixture. It verified failure reporting for elevated and insufficient-privilege database logins, database selection, missing and completed schema, all five applied versions, a no-op rerun, restart and backup persistence, provider and database outages, and refusal of an inaccessible volume. Chromium checked the blocked and enabled Assistant and the diagnostics link. A temporary fault injected into the browser context request verified focus-driven readiness recovery. The build used a temporary Cloud npm CA mount and the workspace used only fictional test data.
 
 The image ID, exact commands and test caveats are recorded in implementation status. Live Coolify and the currently deployed PostgreSQL login were outside this test run. Git commit and build timestamp may be supplied through optional deployment metadata (`SLM_BUILD_COMMIT` and `SLM_BUILD_TIMESTAMP`). Hosted provider capability and fine-tuned identity remain unknown until observed. [Implementation status](IMPLEMENTATION_STATUS.md)
+
+## PostgreSQL 18.7 permission inspection follow-up
+
+The original `databaseIdentity` query collapsed seven role checks into one `elevated` result:
+
+```sql
+(rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls OR
+  pg_has_role(current_user, 'pg_read_all_data', 'MEMBER') OR
+  pg_has_role(current_user, 'pg_write_all_data', 'MEMBER')) AS elevated
+```
+
+`migrateWorkspace` used that result in the same rejection branch as a missing catalog row or a reserved database name (`postgres`, `template0`, `template1`). The reported text came from this application policy branch. The error handler could not identify which predicate failed. An SQL exception in the catalog query followed a different path.
+
+I ran the original SQL on a disposable PostgreSQL 18.7 server with the dedicated database `OFFGRID` owned by restricted login `offgrid_app`. It returned `elevated = false`. The literal owner of `public` was `pg_database_owner`, while `pg_has_role(..., 'USAGE')` and effective `CREATE` on `public` both returned true. Granting either broad-data membership separately changed the original result to `elevated = true` without changing the five role attributes. The production evidence establishes connectivity and those five attributes. It does not establish either broad membership result or the app's selected target at the failed attempt. The exact predicate on the VPS therefore remains unconfirmed. PostgreSQL 18.7 syntax and special public ownership did not reproduce a rejection by themselves.
+
+Permission inspection now lists each predicate and its expected and actual value. Special public ownership is informational. Required DDL is evaluated against the dedicated database or `slm_workspace`, depending on whether the workspace schema exists and whether migrations remain pending. Both broad memberships are still rejected. SQL execution failures and policy denials are classified separately. Query failures retain the stage, query identifier, SQLSTATE, duration, and a controlled error summary. The app omits raw driver messages because they can contain private details.
+
+Connection testing and runtime pooling both use `databaseConnectionOptions` and the saved URL's TLS mode. A successful save increments the generation on credential or URL changes and closes the old pool. Migration, permission inspection and Diagnostics use the same configured pool and verify the generation. The runtime uses `search_path=pg_catalog`, so its `current_schema()` differs from a standalone PostgreSQL session with the normal `public` default. The workspace catalog checks use the explicit `slm_workspace` schema. [Database implementation](../lib/database.ts) · [Permission diagnostics](../lib/diagnostics.ts)
+
+After deploying this revision, compare the target database and login and inspect the individual **Database connectivity** predicates under **Settings → Diagnostics**. If the report identifies a broad membership, use a dedicated restricted login without that membership or have the database administrator review the grant. Make any grant change through the database's normal change process. If the report shows a SQL failure, use its query identifier and SQLSTATE. Keep the existing database and volume, then run pending migrations after correcting the reported cause.

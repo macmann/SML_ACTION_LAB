@@ -52,7 +52,7 @@ async function configuredPool() {
 export async function withDatabase<T>(run: (pool: pg.Pool, generation: number) => Promise<T>) {
   return databaseLane(async () => {
     try {
-      const { pool, generation } = await configuredPool();
+      const { pool, generation } = await databaseStep("connection_failure", "Load configured database connection", "database.pool", configuredPool);
       return await run(pool, generation);
     } catch (error) {
       if (error instanceof WorkspaceError) throw error;
@@ -73,6 +73,9 @@ export function databaseIssue(error: unknown) {
   if (error instanceof WorkspaceError) return error.message;
   const code = (error as { code?: string } | null)?.code;
   switch (code) {
+    case "42703": return "PostgreSQL reported a missing column (42703). Verify the catalog or workspace table shape.";
+    case "42883": return "PostgreSQL could not resolve a function or operator (42883). Verify the server supports the query.";
+    case "42601": return "PostgreSQL reported invalid SQL syntax (42601). Review the indicated query in this release.";
     case "42501": return "PostgreSQL denied permission (42501). Check ownership and grants for the configured login.";
     case "28P01": case "28000": return "PostgreSQL rejected authentication. Check the configured login and password.";
     case "3D000": return "PostgreSQL could not find the configured database (3D000). Check the database name.";
@@ -87,13 +90,36 @@ export function databaseIssue(error: unknown) {
   }
 }
 
+type FailureCategory = "connection_failure" | "sql_execution_failure" | "permission_policy_rejection" |
+  "migration_execution_failure" | "workspace_readiness_failure";
+
+export class DatabaseDiagnosticError extends WorkspaceError {
+  readonly diagnostic: { category: FailureCategory; stage: string; queryId?: string; sqlstate?: string; message: string; durationMs: number };
+
+  constructor(category: FailureCategory, stage: string, message: string, durationMs: number, queryId?: string, sqlstate?: string) {
+    super(message, 503);
+    this.diagnostic = { category, stage, queryId, sqlstate, message, durationMs };
+  }
+}
+
+export async function databaseStep<T>(category: FailureCategory, stage: string, queryId: string, run: () => Promise<T>) {
+  const started = Date.now();
+  try { return await run(); }
+  catch (error) {
+    if (error instanceof DatabaseDiagnosticError) throw error;
+    const code = (error as { code?: string } | null)?.code;
+    throw new DatabaseDiagnosticError(category, stage, databaseIssue(error), Date.now() - started, queryId,
+      typeof code === "string" && /^[0-9A-Z]{5}$/.test(code) && "severity" in Object(error) ? code : undefined);
+  }
+}
+
 function invalidLedger(rows: Applied[]) {
   return rows.some((row, i) => migrations[i]?.version !== row.version || checksum(migrations[i].sql) !== row.checksum);
 }
 
 export async function inspectSchema(client: Queryable) {
   if (!migrationRegistryAvailable) throw new WorkspaceError("The release migration registry is incomplete. Rebuild the image before changing the database.", 503);
-  const { rows } = await client.query<{ name: string; exists: boolean; read: boolean; write: boolean; audit: boolean }>(`
+  const { rows } = await databaseStep("sql_execution_failure", "Inspect required workspace relations", "workspace.relations", () => client.query<{ name: string; exists: boolean; read: boolean; write: boolean; audit: boolean }>(`
     SELECT name, c.oid IS NOT NULL AS exists,
       COALESCE(has_table_privilege(current_user, c.oid, 'SELECT'), false) AS read,
       COALESCE(has_table_privilege(current_user, c.oid, 'INSERT')
@@ -103,15 +129,17 @@ export async function inspectSchema(client: Queryable) {
         AND has_table_privilege(current_user, c.oid, 'UPDATE'), false) AS audit
     FROM unnest($1::text[]) AS t(name)
     LEFT JOIN pg_namespace n ON n.nspname='slm_workspace'
-    LEFT JOIN pg_class c ON c.relnamespace=n.oid AND c.relname=t.name AND c.relkind IN ('r','p')`, [requiredTables]);
+    LEFT JOIN pg_class c ON c.relnamespace=n.oid AND c.relname=t.name AND c.relkind IN ('r','p')`, [requiredTables]));
   const missingTables = rows.filter((row) => !row.exists).map((row) => row.name);
   const inaccessibleTables = rows.filter((row) => row.exists && !row.read).map((row) => row.name);
   const writeRestrictedTables = rows.filter((row) => row.exists && !row.write).map((row) => row.name);
   const canRead = (name: string) => rows.some((row) => row.name === name && row.read);
   const applied = canRead("schema_migrations")
-    ? (await client.query<Applied>("SELECT version, checksum, applied_at FROM slm_workspace.schema_migrations ORDER BY version")).rows : [];
+    ? (await databaseStep("sql_execution_failure", "Read migration ledger", "workspace.ledger", () =>
+      client.query<Applied>("SELECT version, checksum, applied_at FROM slm_workspace.schema_migrations ORDER BY version"))).rows : [];
   const installation = canRead("installation")
-    ? (await client.query<{ id: string }>("SELECT id FROM slm_workspace.installation WHERE singleton")).rows[0]?.id : undefined;
+    ? (await databaseStep("sql_execution_failure", "Read workspace installation", "workspace.installation", () =>
+      client.query<{ id: string }>("SELECT id FROM slm_workspace.installation WHERE singleton"))).rows[0]?.id : undefined;
   const auditWritable = rows.some((row) => row.name === "inference_logs" && row.audit);
   const ledgerCompatible = !invalidLedger(applied);
   const pending = ledgerCompatible ? expectedVersions.slice(applied.length) : null;
@@ -121,23 +149,71 @@ export async function inspectSchema(client: Queryable) {
       Boolean(installation) };
 }
 
+type DatabaseIdentity = {
+  database: string; username: string; schema: string | null; schemaExists: boolean; schemaUsage: boolean;
+  schemaCreate: boolean; databaseCreate: boolean; schemaOwner: boolean; databaseOwner: boolean;
+  superuser: boolean; createDatabase: boolean; createRole: boolean; replication: boolean; bypassRls: boolean;
+  readAllData: boolean; writeAllData: boolean;
+  publicOwner: string | null; publicEffectiveOwner: boolean; publicUsage: boolean; publicCreate: boolean;
+};
+
 export async function databaseIdentity(client: Queryable) {
-  const { rows: [identity] } = await client.query<{
-    database: string; username: string; schema: string | null; schemaExists: boolean; schemaUsage: boolean;
-    schemaCreate: boolean; databaseCreate: boolean; elevated: boolean; schemaOwner: boolean;
-  }>(`
-    SELECT current_database() AS database, current_user AS username, current_schema() AS schema,
-      has_database_privilege(current_user, current_database(), 'CREATE') AS "databaseCreate",
-      n.oid IS NOT NULL AS "schemaExists",
-      COALESCE(has_schema_privilege(current_user, n.oid, 'USAGE'), false) AS "schemaUsage",
-      COALESCE(has_schema_privilege(current_user, n.oid, 'CREATE'), false) AS "schemaCreate",
-      COALESCE(pg_has_role(current_user, n.nspowner, 'USAGE'), false) AS "schemaOwner",
-      (rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls OR
-        pg_has_role(current_user, 'pg_read_all_data', 'MEMBER') OR
-        pg_has_role(current_user, 'pg_write_all_data', 'MEMBER')) AS elevated
-    FROM pg_roles LEFT JOIN pg_namespace n ON n.nspname = 'slm_workspace' WHERE rolname = current_user
-  `);
+  const started = Date.now();
+  const { rows: [identity] } = await databaseStep("sql_execution_failure", "Inspect database permissions", "database.permissions", () =>
+    client.query<DatabaseIdentity>(`
+      SELECT current_database() AS database, current_user AS username, current_schema() AS schema,
+        has_database_privilege(current_user, d.oid, 'CREATE') AS "databaseCreate",
+        pg_has_role(current_user, d.datdba, 'USAGE') AS "databaseOwner",
+        n.oid IS NOT NULL AS "schemaExists",
+        COALESCE(has_schema_privilege(current_user, n.oid, 'USAGE'), false) AS "schemaUsage",
+        COALESCE(has_schema_privilege(current_user, n.oid, 'CREATE'), false) AS "schemaCreate",
+        COALESCE(pg_has_role(current_user, n.nspowner, 'USAGE'), false) AS "schemaOwner",
+        r.rolsuper AS superuser, r.rolcreatedb AS "createDatabase", r.rolcreaterole AS "createRole",
+        r.rolreplication AS replication, r.rolbypassrls AS "bypassRls",
+        pg_has_role(current_user, 'pg_read_all_data', 'MEMBER') AS "readAllData",
+        pg_has_role(current_user, 'pg_write_all_data', 'MEMBER') AS "writeAllData",
+        pg_get_userbyid(p.nspowner) AS "publicOwner",
+        COALESCE(pg_has_role(current_user, p.nspowner, 'USAGE'), false) AS "publicEffectiveOwner",
+        COALESCE(has_schema_privilege(current_user, p.oid, 'USAGE'), false) AS "publicUsage",
+        COALESCE(has_schema_privilege(current_user, p.oid, 'CREATE'), false) AS "publicCreate"
+      FROM pg_roles r JOIN pg_database d ON d.datname = current_database()
+      LEFT JOIN pg_namespace n ON n.nspname = 'slm_workspace'
+      LEFT JOIN pg_namespace p ON p.nspname = 'public'
+      WHERE r.rolname = current_user
+    `));
+  if (!identity) throw new DatabaseDiagnosticError("sql_execution_failure", "Inspect database permissions",
+    "PostgreSQL returned no catalog row for the active database login.", Date.now() - started, "database.permissions");
   return identity;
+}
+
+export function permissionChecks(role: DatabaseIdentity, pending: boolean | null = null) {
+  const predicate = (name: string, expected: boolean, actual: boolean, explanation: string) =>
+    ({ name, expected, actual, passed: actual === expected, explanation });
+  const checks = [
+    predicate("Dedicated database name", true, !["postgres", "template0", "template1"].includes(role.database),
+      "Use a dedicated application database."),
+    predicate("rolsuper", false, role.superuser, "Use a login without superuser privileges."),
+    predicate("rolcreatedb", false, role.createDatabase, "Use a login without the CREATEDB attribute."),
+    predicate("rolcreaterole", false, role.createRole, "Use a login without the CREATEROLE attribute."),
+    predicate("rolreplication", false, role.replication, "Use a login without the REPLICATION attribute."),
+    predicate("rolbypassrls", false, role.bypassRls, "Use a login without the BYPASSRLS attribute."),
+    predicate("pg_read_all_data membership", false, role.readAllData, "Use a login outside the pg_read_all_data membership chain."),
+    predicate("pg_write_all_data membership", false, role.writeAllData, "Use a login outside the pg_write_all_data membership chain."),
+  ];
+  if (role.schemaExists) checks.push(predicate("USAGE on slm_workspace", true, role.schemaUsage,
+    "Grant the app login USAGE on slm_workspace."));
+  if (pending) checks.push(role.schemaExists
+    ? predicate("CREATE on slm_workspace", true, role.schemaCreate, "The app login needs CREATE on slm_workspace for pending migrations.")
+    : predicate("CREATE on the dedicated database", true, role.databaseCreate, "The app login needs CREATE on the dedicated database to initialize slm_workspace."));
+  return checks;
+}
+
+function enforcePermissionChecks(role: DatabaseIdentity, pending: boolean | null, stage: string, started: number) {
+  const failures = permissionChecks(role, pending).filter(({ passed }) => !passed);
+  if (failures.length) throw new DatabaseDiagnosticError("permission_policy_rejection", stage,
+    failures.map(({ name, actual, expected, explanation }) =>
+      `${name} is ${actual}; expected ${expected}. ${explanation}`).join(" "),
+    Date.now() - started, "database.permissions");
 }
 
 export function schemaBlockers(schema: Awaited<ReturnType<typeof inspectSchema>>) {
@@ -162,43 +238,43 @@ export async function migrateWorkspace(expectedGeneration: number) {
         throw new WorkspaceError("The database configuration changed before migration started. Check the target and retry.");
       }
       targetGeneration = generation;
-      const client = await pool.connect();
+      const client = await databaseStep("connection_failure", stage, "database.connect", () => pool.connect());
       try {
         stage = "Acquire migration lock";
-        await client.query("BEGIN");
-        await client.query("SELECT pg_advisory_xact_lock(1936485681, 841302)");
+        await databaseStep("migration_execution_failure", stage, "migration.begin", () => client.query("BEGIN"));
+        await databaseStep("migration_execution_failure", stage, "migration.lock", () => client.query("SELECT pg_advisory_xact_lock(1936485681, 841302)"));
         stage = "Inspect database permissions";
         const role = await databaseIdentity(client);
-        if (!role || role.elevated || ["postgres", "template0", "template1"].includes(role.database)) {
-          throw new WorkspaceError("Use a dedicated database and a restricted login role before running migrations.");
-        }
+        enforcePermissionChecks(role, null, stage, started);
         // Read the ledger before doing DDL so a fully migrated workspace can report a no-op.
         stage = "Read migration history";
-        if (role.schemaExists && !role.schemaUsage) throw new WorkspaceError("Grant the app login USAGE on slm_workspace.");
         const before = await inspectSchema(client);
-        if (!before.ledgerCompatible) throw new WorkspaceError(schemaBlockers(before)[0]);
-        if (before.inaccessibleTables.includes("schema_migrations")) throw new WorkspaceError(schemaBlockers(before)[0]);
+        if (!before.ledgerCompatible || before.inaccessibleTables.includes("schema_migrations")) {
+          throw new DatabaseDiagnosticError("workspace_readiness_failure", stage, schemaBlockers(before)[0],
+            Date.now() - started, "workspace.ledger");
+        }
         const pending = before.pending ?? [];
         if (pending.length) {
           stage = "Prepare workspace schema";
-          if (!role.schemaExists && !role.databaseCreate) throw new WorkspaceError("The app login needs CREATE on the dedicated database to initialize slm_workspace.");
-          if (role.schemaExists && !role.schemaCreate) throw new WorkspaceError("The app login needs CREATE on slm_workspace for pending migrations.");
-          if (!role.schemaExists) await client.query("CREATE SCHEMA slm_workspace");
-          if (before.missingTables.includes("schema_migrations")) await client.query(`CREATE TABLE slm_workspace.schema_migrations (
+          enforcePermissionChecks(role, true, stage, started);
+          if (!role.schemaExists) await databaseStep("migration_execution_failure", stage, "migration.create_schema", () => client.query("CREATE SCHEMA slm_workspace"));
+          if (before.missingTables.includes("schema_migrations")) await databaseStep("migration_execution_failure", stage, "migration.create_ledger", () => client.query(`CREATE TABLE slm_workspace.schema_migrations (
             version integer PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now()
-          )`);
+          )`));
           for (const migration of migrations.slice(before.applied.length)) {
             stage = "Apply migration " + migration.version;
-            await client.query(migration.sql);
-            await client.query("INSERT INTO slm_workspace.installation (id) VALUES ($1) ON CONFLICT (singleton) DO NOTHING", [randomUUID()]);
-            await client.query("INSERT INTO slm_workspace.schema_migrations (version, checksum) VALUES ($1, $2)", [migration.version, checksum(migration.sql)]);
+            await databaseStep("migration_execution_failure", stage, "migration.version." + migration.version, async () => {
+              await client.query(migration.sql);
+              await client.query("INSERT INTO slm_workspace.installation (id) VALUES ($1) ON CONFLICT (singleton) DO NOTHING", [randomUUID()]);
+              await client.query("INSERT INTO slm_workspace.schema_migrations (version, checksum) VALUES ($1, $2)", [migration.version, checksum(migration.sql)]);
+            });
           }
         }
         stage = "Verify expected schema";
         const after = await inspectSchema(client);
-        if (!after.ready) throw new WorkspaceError(schemaBlockers(after).join(" "));
+        if (!after.ready) throw new DatabaseDiagnosticError("workspace_readiness_failure", stage, schemaBlockers(after).join(" "), Date.now() - started);
         stage = "Commit verified migrations";
-        await client.query("COMMIT");
+        await databaseStep("migration_execution_failure", stage, "migration.commit", () => client.query("COMMIT"));
         return { generation, applied: pending, pending: after.pending ?? [], tablesVerified: requiredTables.length };
       } catch (error) {
         await client.query("ROLLBACK").catch(() => {});
@@ -214,8 +290,12 @@ export async function migrateWorkspace(expectedGeneration: number) {
   } catch (error) {
     const message = databaseIssue(error);
     const durationMs = Date.now() - started;
-    await recordOperation("migration", "failed", { generation: targetGeneration ?? expectedGeneration, stage, error: message, durationMs, correlationId });
-    throw new WorkspaceError(`${stage} failed after ${durationMs} ms. ${message}`, 503);
+    const diagnostic = error instanceof DatabaseDiagnosticError ? error.diagnostic :
+      { category: "migration_execution_failure", stage, message, durationMs, sqlstate: undefined, queryId: undefined };
+    await recordOperation("migration", "failed", { generation: targetGeneration ?? expectedGeneration, stage: diagnostic.stage,
+      diagnostic, error: message, durationMs, correlationId });
+    const reference = [diagnostic.queryId, diagnostic.sqlstate].filter(Boolean).join(" · ");
+    throw new WorkspaceError(`${diagnostic.stage} failed after ${durationMs} ms. ${message}${reference ? " [" + reference + "]" : ""}`, 503);
   }
 }
 

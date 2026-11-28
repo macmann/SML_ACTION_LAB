@@ -73,12 +73,72 @@ if (process.argv.includes("documents-persisted")) {
   assert.deepEqual(before.migrations.pending, [1, 2, 3, 4, 5]);
   assert.equal(before.workspace.assistant.distil.ready, false);
   assert.equal((await visit("/api/agent", { headers: documentsHeaders })).status, 503);
+  await switchTo("replacement", "slm_fixture");
+  await migrate(/Inspect database permissions failed.*rolsuper is true/);
+  let rejected = await readinessReport();
+  assert.equal(rejected.migrations.lastAttempt.diagnostic.category, "permission_policy_rejection");
+  assert.equal(rejected.connectivity.permissions.find(({ name }) => name === "rolsuper").passed, false);
   await switchTo("replacement", "slm_elevated");
-  await migrate(/Inspect database permissions failed.*restricted login/);
+  await migrate(/Inspect database permissions failed.*rolcreaterole is true/);
   assert.equal((await readinessReport()).migrations.lastAttempt.type, "failed");
   await switchTo("replacement", "slm_limited");
   await migrate(/Prepare workspace schema failed.*CREATE on the dedicated database/);
   assert.equal((await readinessReport()).migrations.lastAttempt.type, "failed");
+  await switchTo("OFFGRID", "offgrid_app");
+  const owner = await readinessReport();
+  assert.equal(owner.connectivity.target.database, "OFFGRID");
+  assert.equal(owner.connectivity.target.username, "offgrid_app");
+  assert.equal(owner.connectivity.target.publicOwner, "pg_database_owner");
+  assert.equal(owner.connectivity.target.publicEffectiveOwner, true);
+  assert.equal(owner.connectivity.target.databaseOwner, true);
+  assert.equal(owner.connectivity.target.publicCreate, true);
+  const failedPredicates = owner.connectivity.permissions.filter(({ passed }) => !passed);
+  assert.deepEqual(failedPredicates.map(({ name }) => name), ["pg_read_all_data membership"]);
+  await migrate(/Inspect database permissions failed.*pg_read_all_data membership is true/);
+  rejected = await readinessReport();
+  assert.equal(rejected.migrations.lastAttempt.diagnostic.queryId, "database.permissions");
+  assert.equal(rejected.migrations.lastAttempt.diagnostic.category, "permission_policy_rejection");
+
+  const { Client } = (await import("pg")).default;
+  const fixtureConnection = { host: "db-fixture", port: 5432, database: "OFFGRID", password: process.env.SLM_TEST_DB_PASSWORD };
+  const admin = new Client({ ...fixtureConnection, user: "slm_fixture" });
+  await admin.connect();
+  try {
+    await admin.query("REVOKE pg_read_all_data FROM offgrid_app");
+    await admin.query("GRANT pg_write_all_data TO offgrid_app");
+    await migrate(/Inspect database permissions failed.*pg_write_all_data membership is true/);
+    await admin.query("REVOKE pg_write_all_data FROM offgrid_app");
+  } finally { await admin.end(); }
+
+  const ownerClient = new Client({ ...fixtureConnection, user: "offgrid_app" });
+  await ownerClient.connect();
+  try {
+    await ownerClient.query("CREATE SCHEMA slm_workspace");
+    await ownerClient.query("REVOKE CREATE ON SCHEMA slm_workspace FROM offgrid_app");
+    await migrate(/Prepare workspace schema failed.*CREATE on slm_workspace is false/);
+    const ddlDenied = await readinessReport();
+    assert.equal(ddlDenied.connectivity.permissions.find(({ name }) => name === "CREATE on slm_workspace").passed, false);
+    await ownerClient.query("GRANT CREATE ON SCHEMA slm_workspace TO offgrid_app");
+    await ownerClient.query("CREATE TABLE slm_workspace.schema_migrations (fictional_fixture integer)");
+    await migrate(/Read migration ledger failed.*42703/);
+    const failedSql = await readinessReport();
+    for (const detail of [failedSql.connectivity.failure, failedSql.migrations.lastAttempt.diagnostic]) {
+      assert.equal(detail.category, "sql_execution_failure");
+      assert.equal(detail.queryId, "workspace.ledger");
+      assert.equal(detail.sqlstate, "42703");
+      assert.equal(typeof detail.durationMs, "number");
+      assert.ok(!detail.message.includes("fictional_fixture"));
+    }
+    await ownerClient.query("ALTER TABLE slm_workspace.schema_migrations RENAME TO fixture_incomplete_ledger");
+  } finally { await ownerClient.end(); }
+  await migrate(/Workspace migrations applied.*Applied 5, pending 0, verified/);
+  const initialized = await readinessReport();
+  assert.ok(initialized.connectivity.permissions.every(({ passed }) => passed));
+  assert.equal(initialized.workspace.ready, true);
+  assert.equal(initialized.workspace.assistant.distil.ready, true);
+  assert.equal(initialized.migrations.actualVersion, 5);
+  assert.equal((await visit("/api/agent", { headers: documentsHeaders })).status, 200);
+  console.log("Verified a dedicated OFFGRID owner, pg_database_owner semantics, both broad membership rejections, and sanitized SQLSTATE reporting.");
   await switchTo("replacement");
   await migrate(/Workspace migrations applied.*Applied 5, pending 0, verified/);
   await migrate(/No pending migrations.*Applied 0, pending 0/);

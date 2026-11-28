@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { dataRoot } from "./data.mjs";
 import { store } from "./bootstrap.mjs";
 import { operationEvents, recordOperation } from "./operations.mjs";
-import { databaseIdentity, databaseIssue, expectedVersions, migrationRegistryAvailable, inspectSchema, schemaBlockers, withDatabase } from "./database";
+import { DatabaseDiagnosticError, databaseIdentity, databaseIssue, databaseStep, permissionChecks, expectedVersions, migrationRegistryAvailable, inspectSchema, schemaBlockers, withDatabase } from "./database";
 import { indexDiagnostics } from "./documents";
 import { readiness, settingsFrom, defaultSpeech, roles, type Role, type Settings } from "./settings";
 import { speechCapabilities } from "./speech-native.mjs";
@@ -80,31 +80,44 @@ export async function diagnostics() {
   let selectOne = false;
   let connected = false;
   let error: string | null = null;
+  let failureDetail: DatabaseDiagnosticError["diagnostic"] | null = null;
+  const issue = (category: DatabaseDiagnosticError["diagnostic"]["category"], stage: string, message: string) =>
+    ({ category, stage, message, durationMs: Date.now() - started });
   if (settings.database && decryptable) {
     try {
       await withDatabase(async (pool, actualGeneration) => {
-        if (actualGeneration !== generation) throw new Error();
-        const client = await pool.connect();
+        if (actualGeneration !== generation) throw new DatabaseDiagnosticError("connection_failure", "Check configured generation", "Database settings changed. Refresh diagnostics.", Date.now() - started);
+        const client = await databaseStep("connection_failure", "Connect to PostgreSQL", "database.connect", () => pool.connect());
         connected = true;
         try {
-          await client.query("SELECT 1");
+          await databaseStep("sql_execution_failure", "Test SELECT 1", "database.ping", () => client.query("SELECT 1"));
           selectOne = true;
           identity = await databaseIdentity(client);
           if (identity?.schemaExists && !identity.schemaUsage) {
-            error = "The app login needs USAGE on slm_workspace.";
+            const denied = permissionChecks(identity).find(({ name }) => name === "USAGE on slm_workspace");
+            error = denied?.explanation ?? "The app login needs USAGE on slm_workspace.";
+            failureDetail = issue("permission_policy_rejection", "Check workspace schema access", error);
           } else {
             schema = await inspectSchema(client);
           }
         } finally { client.release(); }
       });
-    } catch (failure) { error = databaseIssue(failure); }
+    } catch (failure) {
+      error = databaseIssue(failure);
+      failureDetail = failure instanceof DatabaseDiagnosticError ? failure.diagnostic :
+        issue(connected ? "workspace_readiness_failure" : "connection_failure", "Check workspace readiness", error);
+    }
   } else if (settings.database) {
     error = "Database credentials could not be decrypted. Restore the original config and keys together.";
+    failureDetail = issue("connection_failure", "Decrypt database credentials", error);
   }
   if (settings.database) await recordOperation("database", selectOne ? "connection_verified" : "connection_failed",
-    { generation, durationMs: Date.now() - started, ...(error ? { error } : {}) });
+    { generation, durationMs: Date.now() - started, ...(error ? { error, diagnostic: failureDetail } : {}) });
   const blockers = !settings.database ? ["Save a PostgreSQL connection on the Database tab."] :
     error ? [error] : schema ? schemaBlockers(schema) : ["Workspace schema could not be inspected."];
+  if (!failureDetail && schema && !schema.ready && blockers.length) {
+    failureDetail = issue("workspace_readiness_failure", "Verify workspace schema", blockers.join(" "));
+  }
   const database = !settings.database ? "not_configured" : !selectOne ? "unavailable" :
     schema?.ready ? "ready" : schema?.pending?.length ? "migrations_required" : "schema_unavailable";
   const storageBlockers = ["files", "artifacts"].filter((folder) =>
@@ -136,7 +149,9 @@ export async function diagnostics() {
       configAvailable: directoryAccess.config.readable && directoryAccess.config.writable,
       volumeAvailable: directoryAccess.root.readable && directoryAccess.root.writable },
     connectivity: { configured: Boolean(settings.database), generation, credentialsDecryptable: decryptable, connected, selectOne,
-      target: identity ?? null, latencyMs: settings.database ? Date.now() - started : null,
+      target: identity ?? null,
+      permissions: identity ? permissionChecks(identity, schema?.pending ? schema.pending.length > 0 : null) : null,
+      failure: failureDetail, latencyMs: settings.database ? Date.now() - started : null,
       lastSuccessfulConnection: selectOne ? checkedAt : events.find((event) =>
         event.type === "connection_verified" && event.generation === generation)?.timestamp ?? null,
       currentError: error, lastError: error ?? events.find((event) => event.type === "connection_failed" && event.generation === generation)?.error ?? null },
