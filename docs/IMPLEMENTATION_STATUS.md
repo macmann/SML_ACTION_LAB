@@ -179,3 +179,32 @@ Cloud blocked model downloads and access to the Distil documentation endpoints t
 ### Distil export follow-up
 
 Updated the export against Distil Labs' official public CLI configuration, task, model and dataset reference at revision `c012f4daec48e528818adcaa964dfadffa7bc998`. The vendor job now carries the exact fixed prompt and native registry. The 360 vendor rows contain two messages per row with object arguments. The 100 local holdout rows and their independent checksum are byte-for-byte unchanged. `npm run training:export`, `npm run training:audit`, and `npm run contracts:check` passed. The official CLI installer returned HTTP 403. CLI and platform validation remain pending. Model downloads remain blocked, so full offline voice and transcript checks are still pending. No dataset or job was submitted. [Distil Labs reference](https://github.com/distil-labs/distil-cli-skill/tree/c012f4daec48e528818adcaa964dfadffa7bc998/skills/distil-cli/references)
+
+## Phases 9 and 10 — release candidate and operator checks
+
+- The default Compose image bundles FFmpeg, whisper.cpp, Piper, LibreOffice Writer and bubblewrap. It starts as UID 1000 with two CPUs, 3 GiB memory and rotated container logs. Speech weights use the admin-controlled checksum installer. No database or provider is initialized during the build or first boot.
+- Added authenticated diagnostics for a live database probe, migration ledger, model configuration and presence, index counts and storage capacity. Added a 3 GiB document-object quota and 256 MiB free-space reserve. Document extraction now shares the existing capped native worker lane.
+- Added Chromium CI coverage and Docker checks for a clean first boot, recreated containers, backup restoration, provider outages, quota rejection and native launch. Migrations 1–5, the v1 tool profile and the frozen training splits are unchanged.
+- Added deployment, security boundaries, recovery and retention guidance, and the training handoff. Use fictional data for provider requests. The operator controls what gets sent, and upstream endpoints may log prompts and responses. [Coolify runbook](COOLIFY.md) · [Release checklist](RELEASE.md) · [Distil handoff](DISTIL_TRAINING.md)
+
+### Verified commands
+
+The application image revision is `466491e8827f2384bc8a9fdac22b17a8532ed42a`, built locally as `sha256:913f6c5ec8b5b768038a5ed57e4a0eca37ac6a09ef35e4eb47dd5fc7223892d7`. Clean-clone checks used the identical application code at `156d6ee28f85afd2178c2722acc26f9994881c69`. The later commits through the image revision change the test harness only.
+
+| Check | Observed result |
+| --- | --- |
+| `npm ci --cache /tmp/slm-npm --no-fund`, `npm run lint`, `npm run typecheck`, `npm run contracts:check`, `npm run training:audit`, `npm test` | Passed in a clean clone. All 28 tests passed. The final harness revision also passed lint, type checks, audits and all 28 tests. |
+| `NEXT_TELEMETRY_DISABLED=1 npm run build` | Passed in the clean clone. Verified the standalone server, PDF worker, ExcelJS, PDFKit, locked holdout and checksum were present. |
+| `docker compose config --quiet` | Passed. Rendered service exposes 3000 internally, declares 3 GiB and two CPUs, and has no host port or required user environment. |
+| `npm --cache /tmp/slm-npm audit --audit-level=high` | Reported zero vulnerabilities. |
+| `docker build --secret id=proxy_ca,src=<Cloud CA> -f <temporary Dockerfile> -t slm-release-test:phase910 .` | Passed from the clean clone. The direct dependency build timed out at 75 seconds. The successful build used an ephemeral Cloud npm trust mount with TLS verification enabled. Production does not require a build secret. |
+| Offline native smoke (`docker run --rm --network none --cpus 2 --memory 3g`) | Whisper, Piper and LibreOffice launched. FFmpeg flite produced a 94,958-byte WAV in 126 ms. Node process peak was 55,984 KiB, excluding native subprocesses. Actual Whisper and Piper inference skipped because the verified model files were absent. |
+| `docker inspect` and cgroup checks | HostConfig recorded `3221225472 2000000000 node`. The container and environment both reported `cpu.max=400000 100000` and `memory.max=34359738368`. The observed stats belonged to the shared Cloud cgroup, so the app-specific limits and peak RAM could not be confirmed there. |
+| `COMPOSE_FILE="$PWD/compose.yaml:/tmp/slm-rc-prebuilt-compose.yaml" SLM_BROWSER_TEST=1 SLM_CHROMIUM=/usr/bin/chromium SLM_SCREENSHOT_DIR=/tmp/slm-rc-screenshots npm run test:integration` | Verified configuration-free startup, wrong-token and origin rejection, database migration and switching, TLS provider probes, quota rejection, authenticated downloads, model identity and replay, all ten agent actions with fictional fixtures, persistent data and session recovery after container recreation, and a database-and-volume restore into fresh storage. PostgreSQL and provider outages left local administration or manual document operations available, respectively. The temporary Compose overlay selected the verified image and cleared its build stanza. |
+| Chromium E2E, run by the same command | Passed unclaimed setup routing, admin sign-in, upload, search, preview, actual download, missing speech model UI, and layout at 320 and 1,280 CSS pixels. Saved setup and document screenshots from Chromium. |
+
+Versions used include Node 24.22.3, npm 11.19.1, Next.js 16.4.6, Docker 29.9.2, Compose 2.40.3, PostgreSQL fixture 17.7, Playwright Core 1.65.1 and Chromium 156.0.8078.79. The native image pins Debian FFmpeg 5.1.9, LibreOffice Writer 7.4.7, bubblewrap 0.8.0, whisper.cpp 1.8.3 and Piper 2023.11.14-2.
+
+### Release limits
+
+Cloud's kernel denied an unprivileged namespace for bubblewrap. Installed LibreOffice launched and conversion failed closed. Successful isolated DOCX-to-PDF conversion remains a target-host check. The speech weight downloads and Distil CLI installer were inaccessible, so actual speech inference, HTTPS microphone permission with installed models, CLI/platform validation and model accuracy remain unverified. Live Coolify routing, the intended external PostgreSQL connection and target-host cgroup enforcement require VPS verification. The backup drill restored generated fixture data, and the off-host encryption and backup transport remain operator responsibilities. No VPS deployment, dataset submission, paid inference, training, or release tag was performed.

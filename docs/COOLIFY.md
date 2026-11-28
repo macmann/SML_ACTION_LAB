@@ -27,10 +27,13 @@ Compose requests two CPUs and 3 GiB memory with `cpus: 2.0` and `mem_limit: 3g`.
 
 ```sh
 docker inspect --format '{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}} {{.Config.User}}' APP_CONTAINER
+docker exec APP_CONTAINER sh -c 'cat /sys/fs/cgroup/cpu.max /sys/fs/cgroup/memory.max'
 docker stats --no-stream APP_CONTAINER
 ```
 
-Expect `3221225472 2000000000 node`. Docker caps the app container. It does not cap the Docker builder, proxy, external database or host. Coolify deployment enforcement must be verified on the actual server. One process-wide CPU-job lane runs speech, Office and document parsing with up to three waiting jobs. The workspace has a 64 MiB upload ceiling, a 25 MiB default, 1,500 documents, 12,000 indexed sections, 4 million indexed characters and 2 GiB of originals per active database. The shared volume guard caps originals plus extracted artifacts at 3 GiB and reserves 256 MiB of filesystem free space for writes. Models, bootstrap files, native temp jobs and backups require separate capacity. Set a filesystem-level quota or dedicated filesystem if a hard limit covering the entire volume is required. Monitor filesystem free space and Docker logs. Compose rotates local container logs at three 10 MB files.
+Expect `3221225472 2000000000 node` from inspect. On a cgroup v2 host, verify that CPU quota divided by period equals two and that the memory limit is 3,221,225,472 bytes. The builder, proxy and external database have separate resource budgets. Cloud's rootless Docker reported the requested HostConfig but exposed the environment's shared cgroup to the check. Coolify enforcement remains a target-host check.
+
+One process-wide CPU-job lane runs speech, Office and document parsing with up to three waiting jobs. The workspace has a 64 MiB upload ceiling, a 25 MiB default, 1,500 documents, 12,000 indexed sections, 4 million indexed characters and 2 GiB of originals per active database. The shared volume guard caps originals plus extracted artifacts at 3 GiB and reserves 256 MiB of filesystem free space for writes. Models, bootstrap files, native temp jobs and backups require separate capacity. Set a filesystem-level quota or dedicated filesystem if a hard limit covering the entire volume is required. Monitor filesystem free space and Docker logs. Compose rotates local container logs at three 10 MB files.
 
 LibreOffice requires an unprivileged bubblewrap namespace sandbox. Restrictive hosts may block it. Verify with a small synthetic conversion and confirm the resulting PDF downloads. The converter fails closed when isolation cannot start. Keep the container non-root and the default protections enabled. DOCX editing and PDFKit invoice generation remain usable.
 

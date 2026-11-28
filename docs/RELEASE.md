@@ -4,9 +4,9 @@ Use the reviewed commit and record its full Git SHA and image digest before crea
 
 ## Verification
 
-- [ ] Clean clone. Confirm repository status, install from the npm lockfile, validate contracts and datasets, run lint, typechecks, unit tests and a standalone build.
-- [ ] Run the zero-config Docker integration. Verify private health and diagnostics behavior, wrong-token handling, TLS model probe and failures, migrations, uploads, search, all ten native agent cases, approval replay, missing speech weights, authenticated downloads, recreation and backup restore.
-- [ ] Run Chromium E2E. Verify the real setup, login, document upload, search, preview, download and missing-model interface at mobile and desktop widths.
+- [x] Clean clone. Confirm repository status, install from the npm lockfile, validate contracts and datasets, run lint, typechecks, unit tests and a standalone build.
+- [x] Run the zero-config Docker integration. Verify private health and diagnostics behavior, wrong-token handling, TLS model probe and failures, migrations, uploads, search, all ten native agent cases, approval replay, missing speech weights, authenticated downloads, recreation and backup restore.
+- [x] Run Chromium E2E. Verify the real setup, login, document upload, search, preview, download and missing-model interface at mobile and desktop widths.
 - [ ] On the intended host, confirm proxy routing and HTTPS, PostgreSQL reachability and TLS, non-root UID, 3 GiB and two CPUs, the existing named volume, and a documented backup and restore drill.
 - [ ] Install verified speech models and test actual Whisper and Piper outputs. Measure CPU time and peak memory on the target. Verify browser permission over HTTPS. Test isolated Office conversion without changing container privilege.
 - [ ] If using Distil, verify the export with the CLI and confirm checkpoint metadata and endpoint attestation. Keep evaluation records and vendor denominators. Run paid evaluation only after separate authorization.
