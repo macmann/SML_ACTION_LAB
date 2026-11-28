@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SettingsForm } from "@/components/settings-form";
 import { currentAdmin } from "@/lib/auth";
 import { requireAdmin } from "@/lib/access";
@@ -29,7 +30,7 @@ export default async function SettingsPage() {
   return (
     <>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Settings</h1>
-      <a className="underline" href="/api/diagnostics">View authenticated diagnostics (JSON)</a>
+      <Link className="underline" href="/api/diagnostics" prefetch={false}>View authenticated diagnostics (JSON)</Link>
       <p className="text-[var(--muted)]">{!settings.database ? "Set up PostgreSQL to continue." :
         settings.providerChoice === "skipped" ? "Setup complete in manual mode." :
         settings.providerChoice ? "Setup complete with a configured provider." : "Set up Distil or continue in manual mode."}</p>

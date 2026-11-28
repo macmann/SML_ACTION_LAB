@@ -42,14 +42,20 @@ EXPOSE 3000
 CMD ["sh", "-c", "umask 077 && node scripts/init-data.mjs && exec node server.js"]
 
 
-FROM runtime AS speech-runtime
-USER root
-RUN apt-get update && apt-get install -y --no-install-recommends \
+FROM base AS native-runtime
+RUN --mount=type=bind,from=speech-native,source=/opt/slm-speech,target=/mnt/slm-speech \
+    apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg=7:5.1.9-0+deb12u1 bubblewrap=0.8.0-2+deb12u1 util-linux=2.38.1-5+deb12u3 \
     libreoffice-writer=4:7.4.7-1+deb12u14 fonts-liberation=1:1.07.4-11 \
-    && rm -rf /var/lib/apt/lists/*
-COPY --from=speech-native /opt/slm-speech /opt/slm-speech
+    && rm -rf /var/lib/apt/lists/* \
+    && cp -a /mnt/slm-speech /opt/slm-speech
+
+FROM native-runtime AS speech-runtime
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
+RUN --mount=type=bind,from=runtime,source=/app,target=/mnt/app cp -a /mnt/app/. /app/
 USER node
+EXPOSE 3000
+CMD ["sh", "-c", "umask 077 && node scripts/init-data.mjs && exec node server.js"]
 
 # Native executables are bundled. Models are installed separately by the operator.
 FROM speech-runtime AS default
