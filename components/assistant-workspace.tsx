@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type Approval = { id: string; hash: string; version: string; status: string; expiresAt: string;
   plan?: { tool: string; sourceTitle: string }; outcome?: unknown };
-type Context = { attachments: { id: string; title: string }[]; approvals: Approval[] };
+type Context = { attachments: { id: string; title: string }[]; approvals: Approval[]; providerBlockers?: Record<string, string | null> };
 type Response = { status: string; identity?: string; model?: string; tool?: string; validation?: string; message?: string; result?: unknown };
 type Mode = "strict" | "model_only" | "comparison";
 
@@ -40,20 +40,31 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
   const [contextError, setContextError] = useState("");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const refreshId = useRef(0);
 
   function refresh(signal?: AbortSignal) {
+    const id = ++refreshId.current;
     return jsonRequest<Context>("/api/agent", { signal })
-      .then((item) => { if (!signal?.aborted) { setContext(item); setContextError(""); } })
-      .catch((failure) => { if (!signal?.aborted) setContextError(failure.message); });
+      .then((item) => { if (!signal?.aborted && id === refreshId.current) { setContext(item); setContextError(""); } })
+      .catch((failure) => { if (!signal?.aborted && id === refreshId.current) { setContext(undefined); setContextError(failure.message); } });
   }
   useEffect(() => {
     const controller = new AbortController();
     void refresh(controller.signal);
-    return () => controller.abort();
+    const retry = () => { if (document.visibilityState === "visible") void refresh(controller.signal); };
+    window.addEventListener("focus", retry);
+    window.addEventListener("slm-workspace-refresh", retry);
+    document.addEventListener("visibilitychange", retry);
+    return () => {
+      controller.abort();
+      window.removeEventListener("focus", retry);
+      window.removeEventListener("slm-workspace-refresh", retry);
+      document.removeEventListener("visibilitychange", retry);
+    };
   }, []);
 
   async function run() {
-    if (lock.current || !request.trim()) return;
+    if (lock.current || !request.trim() || !available || !context) return;
     lock.current = true;
     setBusy(true);
     setError("");
@@ -81,7 +92,11 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
 
   const draft = result?.result && typeof result.result === "object" && "draft" in result.result ? result.result.draft : undefined;
   const readText = typeof draft === "string" ? draft : result?.message;
-  const available = mode === "comparison" ? comparisonConfigured : routingConfigured;
+  const role = mode === "comparison" ? "comparison" : "distil";
+  const fallbackConfigured = mode === "comparison" ? comparisonConfigured : routingConfigured;
+  const providerBlocker = context?.providerBlockers ? context.providerBlockers[role] :
+    fallbackConfigured ? null : "Configure and enable the selected model on the Model providers tab.";
+  const available = !providerBlocker;
 
   return <>
     <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Assistant</h1>
@@ -92,7 +107,7 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
           <option value="comparison">Comparison model only</option>
         </select>
       </label>
-      {!available && <p>Configure the selected routing model in <Link className="underline" href="/settings">Settings</Link>.</p>}
+      {!available && <p>{providerBlocker} <Link className="underline" href="/settings?tab=providers">Open Model providers</Link></p>}
       <label className="grid gap-1">Request
         <textarea rows={4} required maxLength={2000} className={input} value={request} onChange={(event) => setRequest(event.target.value)} />
       </label>
@@ -118,9 +133,14 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
         <input type="checkbox" checked={share && shareEnabled} disabled={!shareEnabled}
           onChange={(event) => setShare(event.target.checked)} />Send synthetic extracted text to the chosen provider for this turn. The endpoint may log the request and response.{!shareEnabled && " (enable in Preferences first)"}
       </label>}
-      <Button disabled={busy || !available || !context} className="justify-self-start">{busy ? "Working…" : "Run turn"}</Button>
+      {available && context && !request.trim() && <p className="text-sm">Enter a request to run a turn.</p>}
+      {!context && !contextError && <p role="status" className="text-sm">Checking workspace readiness…</p>}
+      <Button disabled={busy || !available || !context || !request.trim()} className="justify-self-start">{busy ? "Working…" : "Run turn"}</Button>
     </form>
-    {contextError && <p role="alert">{contextError} <Link className="underline" href="/settings">Open Settings</Link></p>}
+    {contextError && <div className="grid gap-2">
+      <p role="alert">{contextError} <Link className="underline" href="/settings?tab=diagnostics">Open workspace diagnostics</Link></p>
+      <Button type="button" variant="outline" className="justify-self-start" onClick={() => void refresh()}>Check readiness again</Button>
+    </div>}
     {error && <p role="alert" className="text-[var(--error)]">{error}</p>}
     {result && <section className={panel + " grid gap-2"} aria-label="Turn result">
       <h2 className="text-xl font-semibold">{result.tool ?? "Turn result"}</h2>

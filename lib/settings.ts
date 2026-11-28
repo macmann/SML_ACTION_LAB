@@ -10,6 +10,8 @@ const envelope = z.object({ version: z.literal(1), nonce: z.string(), data: z.st
 const provider = z.object({
   endpoint: envelope, model: z.string(), key: envelope.optional(),
   custom: z.boolean(), privateNetwork: z.boolean(), validationMode: z.enum(validationModes).optional(),
+  validation: z.object({ method: z.enum(["discovery", "chat"]), httpStatus: z.literal(200),
+    discoveryStatus: z.number().optional(), checkedAt: z.string() }).optional(),
 });
 
 export const preferences = z.object({

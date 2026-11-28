@@ -18,7 +18,14 @@ class UpstreamStatusError extends Error {
 }
 class InvalidProviderResponse extends Error {}
 
-export class ProviderValidationError extends Error {}
+export class ProviderValidationError extends Error {
+  httpStatus?: number;
+  stage?: string;
+}
+export function providerHttpStatus(error: unknown) {
+  return error instanceof UpstreamStatusError ? error.status :
+    error instanceof ProviderValidationError ? error.httpStatus : undefined;
+}
 
 export function allowedAddress(address: string, privateNetwork: boolean) {
   const ip = ipaddr.process(address);
@@ -91,8 +98,7 @@ export async function testDatabase(value: string) {
 type Transport = { endpoint: string; key: string; custom: boolean; privateNetwork: boolean };
 type ProviderRequest = { path: string; body?: object; headers?: Record<string, string>; timeout?: number };
 
-export async function providerJson(provider: Transport, input: ProviderRequest): Promise<unknown> {
-  const { endpoint, key, custom, privateNetwork } = provider;
+export function endpointPolicy(endpoint: string, custom: boolean, privateNetwork: boolean) {
   let url: URL;
   let host: string;
   try { url = new URL(endpoint); host = hostname(url); }
@@ -100,6 +106,17 @@ export async function providerJson(provider: Transport, input: ProviderRequest):
   if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash ||
       (!custom && (host !== "api.openai.com" || url.port || url.pathname.replace(/\/$/, "") !== "/v1")) ||
       (privateNetwork && !custom)) throw new EndpointPolicyError();
+  return { url, host };
+}
+
+export async function testEndpointPolicy(endpoint: string, custom: boolean, privateNetwork: boolean) {
+  const { host } = endpointPolicy(endpoint, custom, privateNetwork);
+  await resolve(host, privateNetwork);
+}
+
+export async function providerJson(provider: Transport, input: ProviderRequest): Promise<unknown> {
+  const { endpoint, key, custom, privateNetwork } = provider;
+  const { url, host } = endpointPolicy(endpoint, custom, privateNetwork);
   const { address, family } = await resolve(host, privateNetwork);
   url.pathname = url.pathname.replace(/\/+$/, "") + input.path;
   const body = input.body ? JSON.stringify(input.body) : undefined;
@@ -168,12 +185,12 @@ function probeFailure(stage: string, error: unknown) {
       status >= 300 && status < 400 ? "Redirects are blocked. Enter the final HTTPS base URL." :
       status === 400 || status === 404 || status === 422 ? "Check the base URL and exact model ID." :
       status === 429 ? "The provider is rate limiting requests. Retry later." : "Check the provider's status and retry.";
-    return new ProviderValidationError(`${stage} failed (HTTP ${status}). ${detail}`);
+    return Object.assign(new ProviderValidationError(`${stage} failed (HTTP ${status}). ${detail}`), { httpStatus: status, stage });
   }
   if (error instanceof EndpointPolicyError) return new ProviderValidationError(
     `${stage} blocked by endpoint policy. Use an allowed HTTPS address and enable custom endpoints when needed.`);
-  if (error instanceof InvalidProviderResponse) return new ProviderValidationError(
-    `${stage} returned an invalid or oversized response (HTTP 200).`);
+  if (error instanceof InvalidProviderResponse) return Object.assign(new ProviderValidationError(
+    `${stage} returned an invalid or oversized response (HTTP 200).`), { httpStatus: 200, stage });
   if (error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)) return new ProviderValidationError(
     `${stage} timed out. Check network access from the app container and retry.`);
   return new ProviderValidationError(`${stage} could not connect. Check DNS, outbound HTTPS, and the endpoint certificate.`);
@@ -190,9 +207,9 @@ export async function testProvider(endpoint: string, model: string, key: string,
     try {
       const result = await providerJson(provider, { path: "/models/" + encodeURIComponent(model) });
       if (!result || typeof result !== "object" || !("id" in result) || result.id !== model) {
-        throw new ProviderValidationError("Model discovery returned HTTP 200 without the exact configured model ID. Check the ID or choose Chat Completion Test.");
+        throw Object.assign(new ProviderValidationError("Model discovery returned HTTP 200 without the exact configured model ID. Check the ID or choose Chat Completion Test."), { httpStatus: 200, stage: "Model discovery" });
       }
-      return;
+      return { method: "discovery" as const, httpStatus: 200 as const };
     } catch (error) {
       if (error instanceof ProviderValidationError) throw error;
       if (mode !== "automatic" || !(error instanceof UpstreamStatusError) || !noDiscovery.includes(error.status)) {
@@ -202,9 +219,9 @@ export async function testProvider(endpoint: string, model: string, key: string,
     }
   }
   if (!consent) {
-    throw new ProviderValidationError(discoveryStatus
+    throw Object.assign(new ProviderValidationError(discoveryStatus
       ? `Model discovery is unavailable (HTTP ${discoveryStatus}). Allow the chat completion test and submit again to verify the model ID.`
-      : "Allow the chat completion test before submitting. The provider may charge for this request.");
+      : "Allow the chat completion test before submitting. The provider may charge for this request."), { httpStatus: discoveryStatus, stage: "Consent" });
   }
   try {
     const result = await providerJson(provider, {
@@ -212,6 +229,7 @@ export async function testProvider(endpoint: string, model: string, key: string,
       body: { model, messages: [{ role: "user", content: "Reply with OK." }] },
     });
     if (!chatResult.safeParse(result).success) throw new InvalidProviderResponse();
+    return { method: "chat" as const, httpStatus: 200 as const, discoveryStatus };
   } catch (error) {
     throw probeFailure("Chat completion test", error);
   }

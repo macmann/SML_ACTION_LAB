@@ -4,9 +4,10 @@ import { z } from "zod";
 import { currentAdmin, requireSameOrigin } from "@/lib/auth";
 import { store } from "@/lib/bootstrap.mjs";
 import { preferences, roles, settingsFrom, speechSettings } from "@/lib/settings";
-import { testDatabase, testProvider, ProviderValidationError, validationModes } from "@/lib/probes";
-import { closeDatabase, databaseLane, migrateWorkspace, WorkspaceError } from "@/lib/database";
+import { testDatabase, testProvider, providerHttpStatus, ProviderValidationError, validationModes } from "@/lib/probes";
+import { closeDatabase, databaseIssue, databaseLane, migrateWorkspace, WorkspaceError } from "@/lib/database";
 import { importedProfile } from "@/lib/model-profile";
+import { recordOperation } from "@/lib/operations.mjs";
 import { revalidatePath } from "next/cache";
 
 const value = (form: FormData, field: string) => {
@@ -21,12 +22,15 @@ export async function updateSettings(_previous: string, form: FormData) {
   const settings = settingsFrom(state);
   if (value(form, "revision") !== String(state.revision)) return "Settings changed. Reload before saving.";
   const operation = value(form, "operation");
+  const started = Date.now();
   let failureMessage = "Settings could not be prepared. Reload Settings and check that the app volume is accessible.";
   try {
     if (operation === "migrate") {
       if (form.get("dedicated") !== "on") return "Confirm that this database is dedicated to SLM Action Lab.";
-      await migrateWorkspace();
-      return "Workspace migrations applied.";
+      const result = await migrateWorkspace(settings.databaseGeneration ?? 1);
+      revalidatePath("/", "layout");
+      const prefix = result.status === "completed" ? "Workspace migrations applied." : "No pending migrations.";
+      return `${prefix} Applied ${result.applied.length}, pending ${result.pending.length}, verified ${result.tablesVerified} tables in ${result.durationMs} ms.`;
     }
     if (operation === "speech") {
       const speech = speechSettings.safeParse({ enabled: form.get("enabled") === "on", model: value(form, "model"),
@@ -52,8 +56,14 @@ export async function updateSettings(_previous: string, form: FormData) {
       if (old && candidate !== old && form.get("confirm") !== "on") {
         return "Confirm the database replacement. Existing data will stay in the original database.";
       }
-      try { await testDatabase(candidate); }
-      catch { return "PostgreSQL connection test failed. Check the URL, TLS settings, credentials and network access from the app container."; }
+      try {
+        await testDatabase(candidate);
+        await recordOperation("database", "candidate_connection_verified", { durationMs: Date.now() - started });
+      } catch (error) {
+        const message = databaseIssue(error);
+        await recordOperation("database", "candidate_connection_failed", { error: message, durationMs: Date.now() - started });
+        return "PostgreSQL connection test failed. " + message;
+      }
       settings.database = await store.encrypt("database", candidate);
       if (candidate !== old) settings.databaseGeneration = (settings.databaseGeneration ?? 0) + 1;
     } else if (operation === "skip") {
@@ -62,8 +72,9 @@ export async function updateSettings(_previous: string, form: FormData) {
     } else if (operation === "resume-provider") {
       if (!settings.database || !settings.distil) return "Test and save the Distil provider first.";
       const distil = settings.distil;
-      await testProvider(await store.decrypt("distil.endpoint", distil.endpoint), distil.model,
+      const validation = await testProvider(await store.decrypt("distil.endpoint", distil.endpoint), distil.model,
         distil.key ? await store.decrypt("distil", distil.key) : "", distil.custom, distil.privateNetwork, distil.validationMode, form.get("chatConsent") === "on");
+      settings.distil = { ...distil, validation: { ...validation, checkedAt: new Date().toISOString() } };
       settings.providerChoice = "configured";
     } else if (operation === "preferences") {
       const parsed = preferences.safeParse({
@@ -101,11 +112,11 @@ export async function updateSettings(_previous: string, form: FormData) {
         const privateNetwork = form.get("privateNetwork") === "on";
         const validationMode = z.enum(validationModes).safeParse(value(form, "validationMode") || "automatic");
         if (!validationMode.success) return "Choose a supported provider validation mode.";
-        await testProvider(endpoint, model, key, custom, privateNetwork, validationMode.data, form.get("chatConsent") === "on");
+        const validation = await testProvider(endpoint, model, key, custom, privateNetwork, validationMode.data, form.get("chatConsent") === "on");
         settings[name] = {
           endpoint: await store.encrypt(name + ".endpoint", endpoint),
           key: key ? await store.encrypt(name, key) : undefined,
-          model, custom, privateNetwork, validationMode: validationMode.data,
+          model, custom, privateNetwork, validationMode: validationMode.data, validation: { ...validation, checkedAt: new Date().toISOString() },
         };
         if (name === "distil") {
           if (endpoint !== previousEndpoint || model !== old?.model) delete settings.routingProfile;
@@ -126,8 +137,23 @@ export async function updateSettings(_previous: string, form: FormData) {
     if (!saved) {
       return "The session or settings changed during testing. Reload and retry.";
     }
+    if (operation === "database") {
+      await recordOperation("database", "configuration_saved", { generation: settings.databaseGeneration, durationMs: Date.now() - started });
+    }
+    if (operation === "resume-provider" || roles.some((role) => role === operation)) {
+      await recordOperation("provider", form.get("remove") === "on" ? "removed" : "validated", {
+        role: operation === "resume-provider" ? "distil" : operation, durationMs: Date.now() - started,
+      });
+    }
   } catch (error) {
-    if (error instanceof WorkspaceError || error instanceof ProviderValidationError) return error.message;
+    if (error instanceof ProviderValidationError) {
+      await recordOperation("provider", "validation_failed", {
+        role: operation === "resume-provider" ? "distil" : operation,
+        error: error.message, httpStatus: providerHttpStatus(error), durationMs: Date.now() - started,
+      });
+      return error.message;
+    }
+    if (error instanceof WorkspaceError) return error.message;
     return failureMessage;
   }
   revalidatePath("/settings");

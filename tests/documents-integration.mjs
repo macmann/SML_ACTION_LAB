@@ -10,10 +10,23 @@ const api = (suffix = "", options = {}) => visit("/api/documents" + suffix, {
   ...options, headers: { ...documentsHeaders, ...options.headers },
 });
 
-async function migrate() {
+const readinessReport = async () => {
+  const response = await visit("/api/diagnostics", { headers: documentsHeaders });
+  assert.equal(response.status, 200);
+  const raw = await response.text();
+  if (process.env.SLM_TEST_DB_PASSWORD) assert.ok(!raw.includes(process.env.SLM_TEST_DB_PASSWORD));
+  assert.ok(!raw.includes("postgresql://") && !raw.includes("model-fixture"));
+  return JSON.parse(raw);
+};
+async function switchTo(database, role = "slm_app") {
+  const url = "postgresql://" + role + ":" + process.env.SLM_TEST_DB_PASSWORD + "@db-fixture:5432/" + database + "?sslmode=disable";
+  const response = await submit("/settings", { url, confirm: "on" }, { cookie: documentsCookie, operation: "database" });
+  assert.match(await response.text(), /Settings saved/);
+}
+async function migrate(expected = /Workspace migrations applied/) {
   const response = await submit("/settings", { dedicated: "on" }, { cookie: documentsCookie, operation: "migrate" });
   assert.equal(response.status, 200);
-  assert.ok((await response.text()).includes("Workspace migrations applied."), "Migration must succeed");
+  assert.match(await response.text(), expected);
 }
 
 async function upload(filename, body, mime, metadata = {}) {
@@ -29,6 +42,9 @@ async function lookup(params = "") {
 assert.equal((await visit("/api/documents")).status, 401);
 
 if (process.argv.includes("documents-persisted")) {
+  const report = await readinessReport();
+  assert.equal(report.database, "ready");
+  assert.equal(report.migrations.actualVersion, 5);
   const { results, attachments } = await lookup("q=QZ-381");
   assert.equal(results.length, 4);
   assert.ok(results.some((doc) => doc.filename === "Fixture.pdf" && doc.reference === "Page 1"));
@@ -45,8 +61,35 @@ if (process.argv.includes("documents-persisted")) {
   assert.equal((await api()).status, 503);
   const refused = await submit("/settings", {}, { cookie: documentsCookie, operation: "migrate" });
   assert.match(await refused.text(), /Confirm that this database is dedicated/);
-  await migrate();
-  await migrate();
+  const resume = await submit("/settings", {}, { cookie: documentsCookie, operation: "resume-provider" });
+  assert.match(await resume.text(), /Settings saved/);
+  const before = await readinessReport();
+  assert.equal(before.providers.distil.configured, true);
+  assert.equal(before.providers.distil.enabled, true);
+  assert.equal(before.connectivity.selectOne, true);
+  assert.equal(before.connectivity.target.database, "replacement");
+  assert.equal(before.database, "migrations_required");
+  assert.equal(before.migrations.registryAvailable, true);
+  assert.deepEqual(before.migrations.pending, [1, 2, 3, 4, 5]);
+  assert.equal(before.workspace.assistant.distil.ready, false);
+  assert.equal((await visit("/api/agent", { headers: documentsHeaders })).status, 503);
+  await switchTo("replacement", "slm_elevated");
+  await migrate(/Inspect database permissions failed.*restricted login/);
+  assert.equal((await readinessReport()).migrations.lastAttempt.type, "failed");
+  await switchTo("replacement", "slm_limited");
+  await migrate(/Prepare workspace schema failed.*CREATE on the dedicated database/);
+  assert.equal((await readinessReport()).migrations.lastAttempt.type, "failed");
+  await switchTo("replacement");
+  await migrate(/Workspace migrations applied.*Applied 5, pending 0, verified/);
+  await migrate(/No pending migrations.*Applied 0, pending 0/);
+  assert.equal((await readinessReport()).workspace.assistant.distil.ready, true);
+  const skip = await submit("/settings", {}, { cookie: documentsCookie, operation: "skip" });
+  assert.match(await skip.text(), /Settings saved/);
+  const after = await readinessReport();
+  assert.equal(after.workspace.ready, true);
+  assert.deepEqual(after.migrations.missingTables, []);
+  assert.equal(after.migrations.lastAttempt.type, "no_pending");
+  assert.equal((await visit("/api/agent", { headers: documentsHeaders })).status, 200);
   assert.equal((await lookup()).total, 0);
   assert.equal((await upload("../fixture.txt", "fixture", "text/plain")).status, 400);
   assert.equal((await upload("broken.pdf", "not a PDF", "application/pdf")).status, 422);
@@ -85,12 +128,10 @@ if (process.argv.includes("documents-persisted")) {
   assert.equal((await api("/" + id, { method: "PATCH", headers: { "Slm-Attachment": "true" } })).status, 204);
   assert.equal((await lookup()).attachments[0].id, id);
 
-  async function switchTo(database) {
-    const url = "postgresql://slm_app:" + process.env.SLM_TEST_DB_PASSWORD + "@db-fixture:5432/" + database + "?sslmode=disable";
-    const response = await submit("/settings", { url, confirm: "on" }, { cookie: documentsCookie, operation: "database" });
-    assert.ok((await response.text()).includes("Settings saved."));
-  }
   await switchTo("fixture");
+  const switched = await readinessReport();
+  assert.equal(switched.connectivity.target.database, "fixture");
+  assert.equal(switched.migrations.actualVersion, 0);
   assert.equal((await api()).status, 503);
   await migrate();
   assert.equal((await lookup("q=QZ-381")).total, 0);

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WorkspaceDiagnostics } from "@/components/workspace-diagnostics";
 import { SettingsForm } from "@/components/settings-form";
 import { currentAdmin } from "@/lib/auth";
 import { requireAdmin } from "@/lib/access";
@@ -22,6 +23,7 @@ const tabs = [
   { id: "providers", label: "Model providers", requirement: "Optional" },
   { id: "speech", label: "Local speech", requirement: "Optional" },
   { id: "preferences", label: "Preferences", requirement: "Optional" },
+  { id: "diagnostics", label: "Diagnostics", requirement: "" },
   { id: "account", label: "Account", requirement: "" },
 ] as const;
 
@@ -49,8 +51,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Settings</h1>
       <Link className="underline" href="/api/diagnostics" prefetch={false}>View authenticated diagnostics (JSON)</Link>
       <p className="text-[var(--muted)]">{!settings.database ? "Set up PostgreSQL to continue." :
-        settings.providerChoice === "skipped" ? "Setup complete in manual mode." :
-        settings.providerChoice ? "Setup complete with a configured provider." : "Set up Distil or continue in manual mode."}</p>
+        settings.providerChoice === "skipped" ? "Configuration saved in manual mode. Check Diagnostics for live workspace readiness." :
+        settings.providerChoice ? "Database and provider configuration saved. Check Diagnostics for live workspace readiness." : "Set up Distil or continue in manual mode."}</p>
 
       <nav aria-label="Settings sections" className="flex flex-wrap gap-2 border-b border-[var(--line)] pb-3">
         {tabs.map(({ id, label, requirement }) => (
@@ -61,6 +63,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           </Link>
         ))}
       </nav>
+
+      {active === "diagnostics" && <WorkspaceDiagnostics revision={revision} configured={Boolean(settings.database)} />}
 
       {active === "database" && <Panel title="PostgreSQL">
         <p className="text-sm font-medium">Required for the document and business workspace.</p>

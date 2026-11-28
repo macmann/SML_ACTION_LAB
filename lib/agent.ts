@@ -1,3 +1,5 @@
+import { endpointPolicy } from "./probes";
+import { recordOperation } from "./operations.mjs";
 import type pg from "pg";
 import { store } from "./bootstrap.mjs";
 import { Clarification, grounded, performAction, type Args } from "./agent-actions";
@@ -37,10 +39,13 @@ export async function runTurn(turn: Turn) {
   const update = (audit: Audit) => withDatabase(async (pool, current) => {
     ensureGeneration(current, generation);
     await saveAudit(pool, turn.id, audit);
+    if (audit.execution && audit.executionMs !== undefined) {
+      await recordOperation("tool", "execution_result", { correlationId: turn.id, status: audit.execution, durationMs: audit.executionMs });
+    }
   });
   const started = await withDatabase(async (pool, current) => {
     ensureGeneration(current, generation);
-    await workspaceId(pool);
+    await workspaceId(pool, { requireAudit: true });
     if (turn.active.length) {
       const { rowCount } = await pool.query("SELECT document_id FROM slm_workspace.active_attachments WHERE document_id=ANY($1::uuid[])", [turn.active]);
       if (rowCount !== turn.active.length) throw new WorkspaceError("Choose references from active attachments.", 400);
@@ -62,6 +67,7 @@ export async function runTurn(turn: Turn) {
   }
   const call = normalizeCall(routed.response);
   const identity = routed.identity;
+  await recordOperation("tool", "validation", { correlationId: turn.id, status: call.status });
   await update({ identity, predicted: call.name, validation: call.status, routingMs: Date.now() - startedAt });
   const common = { identity, model: profile.model, mode: turn.mode, tool: call.name };
   if (call.status !== "valid" || !call.name) {
@@ -88,6 +94,7 @@ export async function runTurn(turn: Turn) {
     return { ...common, status: "rejected", message: "Strict mode requires a verified model attestation for mutations." };
   }
   const processingStarted = Date.now();
+  await recordOperation("tool", "execution_started", { correlationId: turn.id });
   try {
     const action = await useDocuments(async (workspace, pool) => {
       ensureGeneration(workspace.generation, generation);
@@ -149,7 +156,22 @@ export async function agentContext() {
       JOIN slm_workspace.active_attachments a ON a.document_id=d.id ORDER BY d.title,d.id LIMIT 30`);
     return rows;
   });
-  return { approvals, attachments };
+  const settings = settingsFrom(await store.load());
+  const availability = await Promise.all((["distil", "comparison"] as const).map(async (role) => {
+    const provider = settings[role];
+    if (!provider || role === "distil" && settings.providerChoice === "skipped") {
+      return [role, "Configure and enable the selected model on the Model providers tab."] as const;
+    }
+    try {
+      const endpoint = await store.decrypt(role + ".endpoint", provider.endpoint);
+      if (provider.key) await store.decrypt(role, provider.key);
+      endpointPolicy(endpoint, provider.custom, provider.privateNetwork);
+      return [role, null] as const;
+    } catch {
+      return [role, "The selected provider credentials or HTTPS settings could not be verified."] as const;
+    }
+  }));
+  return { approvals, attachments, providerBlockers: Object.fromEntries(availability) };
 }
 
 export async function agentLogs() {

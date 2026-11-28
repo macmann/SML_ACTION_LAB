@@ -32,6 +32,26 @@ try {
     await page.waitForURL("**/assistant");
     await page.getByText(/Local transcription is unavailable/).waitFor();
     assert.ok(await fits());
+    await page.getByLabel("Mode").selectOption("model_only");
+    await page.getByLabel("Request").fill("Find fictional workspace records.");
+    if (phase === "before-migration") {
+      await page.getByRole("alert").filter({ hasText: "Pending workspace migrations" }).waitFor();
+      assert.ok(await button("Run turn").isDisabled());
+      await page.getByRole("link", { name: "Open workspace diagnostics" }).click();
+      await page.getByText("FAIL · Workspace blocked").waitFor();
+      await page.getByRole("button", { name: "Check migration status" }).waitFor();
+      console.log("Chromium verified the pending migration block and diagnostic link.");
+    } else {
+    await page.locator("button:not([disabled])").filter({ hasText: /^Run turn$/ }).waitFor();
+    await page.route("**/api/agent", (route) => route.fulfill({
+      status: 503, json: { error: "Pending workspace migrations: fixture readiness response." },
+    }));
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await page.getByRole("alert").filter({ hasText: "fixture readiness response" }).waitFor();
+    assert.ok(await button("Run turn").isDisabled());
+    await page.unroute("**/api/agent");
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await page.locator("button:not([disabled])").filter({ hasText: /^Run turn$/ }).waitFor();
     await page.getByRole("link", { name: "Settings", exact: true }).click();
     const settingsNav = page.getByRole("navigation", { name: "Settings sections" });
     assert.equal(await settingsNav.getByRole("link", { name: "Database Required" }).getAttribute("aria-current"), "page");
@@ -66,7 +86,8 @@ try {
     await page.emulateMedia({ colorScheme: "light" });
     assert.ok(await fits());
     await screenshot("documents.png");
-    console.log("Chromium verified login, speech unavailable state, upload, search, preview, download and responsive layout.");
+    console.log("Chromium verified Assistant readiness, Settings tabs, upload, search, preview, download and responsive layout.");
+    }
   }
 } finally {
   await browser.close();

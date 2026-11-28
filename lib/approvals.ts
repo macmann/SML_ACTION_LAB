@@ -1,3 +1,4 @@
+import { recordOperation } from "./operations.mjs";
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { z } from "zod";
@@ -52,7 +53,7 @@ function present(row: Row) {
 
 export async function approvalList() {
   return withDatabase(async (pool, generation) => {
-    await workspaceId(pool);
+    await workspaceId(pool, { requireAudit: true });
     const { rows } = await pool.query<Row>(
       `SELECT ${columns} FROM slm_workspace.approvals WHERE database_generation=$1 ORDER BY created_at DESC LIMIT 25`, [generation]);
     return rows.map(present);
@@ -167,7 +168,14 @@ export function approve(id: string, expectedHash: string) {
     } else if (parsed.data.plan.tool !== "edit_document_template" && parsed.data.plan.tool !== "invoice_workflow") {
       throw new WorkspaceError("The approval origin is invalid.", 409);
     }
-    if (await claim(pool, row, parsed.data.plan.tool)) await execute(pool, workspace, row, parsed.data.plan);
-    return present((await read(pool, id))!);
+    if (!await claim(pool, row, parsed.data.plan.tool)) return present((await read(pool, id))!);
+    const started = Date.now();
+    await recordOperation("tool", "approval_execution_started", { correlationId: row.idempotency_key });
+    await execute(pool, workspace, row, parsed.data.plan);
+    const result = (await read(pool, id))!;
+    await recordOperation("tool", "approval_execution_result", { correlationId: row.idempotency_key,
+      status: result.status, durationMs: Date.now() - started,
+      ...(result.status === "failed" ? { error: "Approved operation failed. Review the approval in Assistant." } : {}) });
+    return present(result);
   });
 }

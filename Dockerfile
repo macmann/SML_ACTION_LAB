@@ -32,7 +32,7 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 RUN install -d -m 0755 /app/lib /app/scripts
-COPY --chmod=0644 lib/data.mjs lib/bootstrap.mjs lib/extraction.ts lib/speech-native.mjs lib/heavy-jobs.mjs ./lib/
+COPY --chmod=0644 lib/data.mjs lib/bootstrap.mjs lib/operations.mjs lib/extraction.ts lib/speech-native.mjs lib/heavy-jobs.mjs ./lib/
 COPY --chmod=0644 scripts/data-layout.mjs scripts/init-data.mjs scripts/operator.mjs scripts/extract-document.mjs scripts/install-speech-models.mjs scripts/speech-smoke.mjs ./scripts/
 COPY --chmod=0644 speech/upstream.json ./speech/upstream.json
 # Docker copies ownership into an empty named volume from this directory.

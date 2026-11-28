@@ -83,12 +83,22 @@ if (process.argv.includes("restored")) {
   assert.equal(result.status, 502);
   assert.match((await result.json()).error, /provider failed/i);
   assert.equal((await visit("/api/documents", { headers })).status, 200);
+  const diagnostics = await (await visit("/api/diagnostics", { headers })).json();
+  assert.equal(diagnostics.workspace.ready, true);
+  assert.equal(diagnostics.workspace.assistant.distil.ready, false);
+  assert.ok(["last_request_failed", "blocked"].includes(diagnostics.providers.distil.availability));
+  assert.equal(diagnostics.providers.distil.lastInferenceError.type, "failed");
   console.log("An unreachable provider failed without fallback while manual document operations remained available.");
 } else if (process.argv.includes("database-offline")) {
   const cookie = sessionFrom(await submit("/login", { password: await readFile(passwordFile, "utf8") }), "/assistant");
   assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).status, 200);
   assert.equal((await visit("/api/documents", { headers: { Cookie: cookie } })).status, 503);
-  assert.equal((await (await visit("/api/diagnostics", { headers: { Cookie: cookie } })).json()).database, "unavailable");
+  const report = await (await visit("/api/diagnostics", { headers: { Cookie: cookie } })).json();
+  assert.equal(report.database, "unavailable");
+  assert.equal(report.connectivity.configured, true);
+  assert.equal(report.connectivity.connected, false);
+  assert.ok(report.workspace.blockers.length > 0);
+  assert.equal(report.migrations.applied, null);
   console.log("Administrator sign-in and Settings remained available during a PostgreSQL outage.");
 } else if (process.argv.includes("persisted")) {
   await readiness("ready", "configured", "skipped");
@@ -96,7 +106,7 @@ if (process.argv.includes("restored")) {
   const password = await readFile(passwordFile, "utf8");
   const cookie = sessionFrom(await submit("/login", { password }), "/assistant");
   const { settings } = await store.load();
-  assert.equal(settings.databaseGeneration, 4);
+  assert.equal(settings.databaseGeneration, 7);
   assert.ok((await store.decrypt("database", settings.database)).includes("/replacement"));
   assert.equal(settings.preferences.timezone, "Europe/Berlin");
   const recovered = randomBytes(24).toString("base64url");

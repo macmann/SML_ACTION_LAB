@@ -1,3 +1,11 @@
+// Update the required release version when appending a new migration.
+export const requiredSchemaVersion = 5;
+
+export function hasMigrationRegistry(registry: readonly { version: number; sql: string }[]) {
+  return registry.length === requiredSchemaVersion &&
+    registry.every(({ version, sql }, index) => version === index + 1 && sql.trim().length > 0);
+}
+
 // Append a migration for schema changes. Existing migration checksums are persisted.
 export const migrations = [{
   version: 1,

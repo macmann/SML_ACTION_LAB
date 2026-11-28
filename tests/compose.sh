@@ -74,6 +74,8 @@ done
 docker exec "$project-db" createdb -U slm_fixture replacement
 docker exec -i "$project-db" sh -c 'psql --quiet -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v secret="$POSTGRES_PASSWORD"' <<'SQL'
 CREATE ROLE slm_app LOGIN PASSWORD :'secret';
+CREATE ROLE slm_limited LOGIN PASSWORD :'secret';
+CREATE ROLE slm_elevated LOGIN CREATEROLE PASSWORD :'secret';
 ALTER DATABASE fixture OWNER TO slm_app;
 ALTER DATABASE replacement OWNER TO slm_app;
 SQL
@@ -93,6 +95,10 @@ for attempt in {1..20}; do
   sleep 1
 done
 "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD -e SLM_TEST_PROVIDER_KEY app node --input-type=module - < tests/boot-check.mjs
+if [[ "${SLM_BROWSER_TEST:-0}" == 1 ]]; then
+  "${compose[@]}" exec -T app cat /app/data/tmp/smoke-password |
+    node tests/browser-e2e.mjs "http://$("${compose[@]}" port app 3000)" before-migration
+fi
 cat tests/document-fixtures.mjs tests/boot-check.mjs tests/documents-integration.mjs |
   "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD app node --input-type=module - documents
 before="$("${compose[@]}" ps -q app)"
