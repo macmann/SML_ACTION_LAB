@@ -24,23 +24,23 @@ const counts = Object.fromEntries(Object.entries(samples).map(([split, rows]) =>
   byTool: Object.fromEntries(wireTools.map(({ function: { name } }) => [name, rows.filter((row) => row.messages[2].tool_calls[0].function.name === name).length])),
 }]));
 const lines = (rows) => rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
-const vendor = (rows) => lines(rows.map(({ messages }) => ({ messages, tools: wireTools })));
+// Distil supplies the fixed system prompt and tool declarations from job_description.json.
+const vendor = (rows) => lines(rows.map(({ messages }) => ({ messages: messages.slice(1) })));
 const files = {
   "vendor-candidate/train.jsonl": vendor(samples.train),
   "vendor-candidate/test.jsonl": vendor(samples.test),
   "local/holdout.jsonl": lines(samples.holdout),
   "local/groups.json": JSON.stringify(Object.fromEntries(Object.entries(samples).map(([split, rows]) =>
     [split, rows.map(({ id, group, messages }) => ({ id, group, text: JSON.parse(messages[1].content).request }))])), null, 2) + "\n",
-  // Candidate settings are kept separate from the locked holdout and never submitted by this script.
-  "vendor-candidate/config.yaml": "# Candidate only. Verify exact fields against the current Distil CLI before upload.\n" +
-    "task: chat-completion\nstudent: Qwen3-0.6B\nteacher: openai.gpt-oss-120b\njudge: openai.gpt-oss-120b\n" +
-    "thinking: false\nlora_rank: 16\nsft_epochs: 4\nrlvr: false\ntrain: train.jsonl\ntest: test.jsonl\n",
+  "vendor-candidate/config.yaml": "base:\n  task: chat-completion\n  student_model_name: Qwen3-0.6B\n" +
+    "  teacher_model_name: openai.gpt-oss-120b\n  enable_thinking: false\n  variable_system_prompt: false\n" +
+    "tuning:\n  lora_r: 16\n  num_train_epochs: 4\n  rlvr_dataset_size: 0.0\n" +
+    "evaluation:\n  llm_as_a_judge_model_name: openai.gpt-oss-120b\n" +
+    "synthgen:\n  train_generation_target: 0\n  test_generation_target: 0\n",
   "vendor-candidate/job_description.json": JSON.stringify({
-    verification: "unverified_vendor_configuration", schema_version: schemaVersion, schema_hash: schemaHash,
-    system_prompt: systemPrompt, tools: wireTools,
-    description: "Route fictional document-workspace requests to exactly one native action or control tool.",
-    task: "chat-completion", base_model: "Qwen3-0.6B", teacher: "openai.gpt-oss-120b", judge: "openai.gpt-oss-120b",
-    thinking: false, lora_rank: 16, sft_epochs: 4, rlvr: false,
+    task_description: systemPrompt,
+    tools: wireTools,
+    llm_as_a_judge_instructions: "Score good only if the prediction uses exactly one tool call with the correct action or control and all required information grounded in the request and context. Accept equivalent clarification wording and ignore argument key order. Score bad for extra calls, guessed facts, missing required information or an incorrect tool. Output <score>good</score> or <score>bad</score>.",
   }, null, 2) + "\n",
 };
 const lockedHoldout = (await readFile(join(directory, "local/holdout.sha256"), "utf8")).trim();
@@ -48,7 +48,8 @@ if (lockedHoldout !== digest(files["local/holdout.jsonl"])) {
   throw new Error("The holdout is locked. Use a separately versioned dataset for changed final examples.");
 }
 files["manifest.json"] = JSON.stringify({
-  version: 1, schemaVersion, schemaHash, vendorCompatibility: "unverified", counts,
+  version: 1, schemaVersion, schemaHash, vendorCompatibility: "official_reference_checked_cli_unverified",
+  vendorReference: "https://github.com/distil-labs/distil-cli-skill/tree/c012f4daec48e528818adcaa964dfadffa7bc998/skills/distil-cli", counts,
   sha256: Object.fromEntries(Object.entries(files).map(([name, content]) => [name, digest(content)])),
 }, null, 2) + "\n";
 for (const [name, content] of Object.entries(files)) {

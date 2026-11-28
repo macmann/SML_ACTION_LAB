@@ -2,7 +2,8 @@
   "version": 1,
   "schemaVersion": "1.0.0",
   "schemaHash": "8688419416fc70e0784219a76c8c0cfe87e3129b5e3d977f98f6cbc672997ce4",
-  "vendorCompatibility": "unverified",
+  "vendorCompatibility": "official_reference_checked_cli_unverified",
+  "vendorReference": "https://github.com/distil-labs/distil-cli-skill/tree/c012f4daec48e528818adcaa964dfadffa7bc998/skills/distil-cli",
   "counts": {
     "train": {
       "rows": 300,
@@ -60,11 +61,11 @@
     }
   },
   "sha256": {
-    "vendor-candidate/train.jsonl": "46acebbac78919e91b930337b12a56407df456ac17d4d8cd0c8e7b33f5dbf385",
-    "vendor-candidate/test.jsonl": "00311eecde55ac8b3f62beafe22bbc5e6cd2db80f1eaaa0ae4aee069b456808f",
+    "vendor-candidate/train.jsonl": "adf553752888ce90607dd9104632ee489d91baeba0ce3b4c46844ab97896e775",
+    "vendor-candidate/test.jsonl": "b7eb6e9f2143b6f1c0b0e704d6e43c670370873c2c0ede1819d63abc9fffab33",
     "local/holdout.jsonl": "9d8e9b28e4a92a9e0386be7487725f698d8b4b6ee210da8480d1f9702a630ab9",
     "local/groups.json": "e5f12d9928b431bac9c180f4d0f149879c8f725010cdaadd920de83ed3deb505",
-    "vendor-candidate/config.yaml": "ccbabe9411f41aac898d4ba28e40565807bb8b14f39239572cee9ee79cf6527a",
-    "vendor-candidate/job_description.json": "9510e0854851269983c584ba017fab04ac06fcadef4a88464eea9699cd707c48"
+    "vendor-candidate/config.yaml": "7fac22720b4ebace98c5b85409d53eeea457c954be020bb9651baa855fcb039d",
+    "vendor-candidate/job_description.json": "90d98c52f58157c492e3df119e374dc7343b277f6f605f4ab73c8ab36b165f40"
   }
 }

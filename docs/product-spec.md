@@ -18,4 +18,4 @@ Navigation adapts to the viewport and supports keyboard access. The workspace fo
 
 The optional speech build records up to 60 seconds in the browser, processes the audio locally, and requires review before text enters the assistant. Read-aloud uses the installed English voice. Typed chat remains available without native tools or model files. [Speech](speech.md)
 
-Model Arena evaluates the versioned ten-action router and two control responses against a locked fictional holdout. A separate generation mode evaluates drafts with human review. The Arena records attribution, failures and denominators and exports results as JSON or CSV. Distil export files remain candidates pending vendor verification. [Model Arena](model-arena.md)
+Model Arena evaluates the versioned ten-action router and two control responses against a locked fictional holdout. A separate generation mode evaluates drafts with human review. The Arena records attribution, failures and denominators and exports results as JSON or CSV. Distil export files follow the published vendor reference and await CLI validation. [Model Arena](model-arena.md)

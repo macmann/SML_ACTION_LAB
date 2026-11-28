@@ -1,11 +1,15 @@
-# Candidate only. Verify exact fields against the current Distil CLI before upload.
-task: chat-completion
-student: Qwen3-0.6B
-teacher: openai.gpt-oss-120b
-judge: openai.gpt-oss-120b
-thinking: false
-lora_rank: 16
-sft_epochs: 4
-rlvr: false
-train: train.jsonl
-test: test.jsonl
+base:
+  task: chat-completion
+  student_model_name: Qwen3-0.6B
+  teacher_model_name: openai.gpt-oss-120b
+  enable_thinking: false
+  variable_system_prompt: false
+tuning:
+  lora_r: 16
+  num_train_epochs: 4
+  rlvr_dataset_size: 0.0
+evaluation:
+  llm_as_a_judge_model_name: openai.gpt-oss-120b
+synthgen:
+  train_generation_target: 0
+  test_generation_target: 0

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { checkedArguments, schemaHash, systemPrompt } from "../lib/tool-registry.mjs";
+import { checkedArguments, schemaHash, systemPrompt, wireTools } from "../lib/tool-registry.mjs";
 
 const dir = new URL("../training/", import.meta.url);
 const manifest = JSON.parse(await readFile(new URL("manifest.json", dir)));
@@ -12,6 +12,10 @@ const normalize = (value) => value.toLowerCase().normalize("NFKD").replace(/[^\p
 const tokenize = (text) => new Set(normalize(text).split(/\s+/).filter((token) => token.length > 2));
 const similarity = (a, b) => [...a].filter((token) => b.has(token)).length / new Set([...a, ...b]).size;
 assert.equal(manifest.schemaHash, schemaHash);
+const job = JSON.parse(await readFile(new URL("vendor-candidate/job_description.json", dir)));
+assert.deepEqual(Object.keys(job).sort(), ["llm_as_a_judge_instructions", "task_description", "tools"]);
+assert.equal(job.task_description, systemPrompt);
+assert.deepEqual(job.tools, wireTools);
 assert.equal((await readFile(new URL("local/holdout.sha256", dir), "utf8")).trim(), manifest.sha256["local/holdout.jsonl"]);
 for (const [file, hash] of Object.entries(manifest.sha256)) {
   const data = await readFile(new URL(file, dir));
@@ -22,10 +26,14 @@ for (const [split, total, file] of [
 ]) {
   const rows = (await readFile(new URL(file, dir), "utf8")).trimEnd().split("\n").map(JSON.parse);
   assert.equal(rows.length, total);
-  rows.forEach(({ messages }, i) => {
-    assert.equal(messages[0].content, systemPrompt);
-    const { request } = JSON.parse(messages[1].content);
-    const call = messages[2].tool_calls;
+  rows.forEach((row, i) => {
+    const local = split === "holdout";
+    if (local) assert.equal(row.messages[0].content, systemPrompt);
+    else assert.deepEqual(Object.keys(row), ["messages"]);
+    assert.deepEqual(row.messages.map(({ role }) => role), local ? ["system", "user", "assistant"] : ["user", "assistant"]);
+    const [user, assistant] = row.messages.slice(local ? 1 : 0);
+    const { request } = JSON.parse(user.content);
+    const call = assistant.tool_calls;
     assert.equal(call.length, 1);
     assert.equal(checkedArguments(call[0].function.name, call[0].function.arguments), true);
     assert.equal(request, groups[split][i].text);

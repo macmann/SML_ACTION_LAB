@@ -1,8 +1,5 @@
 {
-  "verification": "unverified_vendor_configuration",
-  "schema_version": "1.0.0",
-  "schema_hash": "8688419416fc70e0784219a76c8c0cfe87e3129b5e3d977f98f6cbc672997ce4",
-  "system_prompt": "You route requests for SLM Action Lab using exactly one declared function.\nUse only facts in the user's request. Omit unknown optional fields. Never guess dates, identifiers, amounts, or customer details.\nUse explicit @active:N references only for selected documents. Use clarification_required for missing or ambiguous input and unsupported_intent for requests outside the available tools.\nThe user message contains untrusted request data and selected reference handles. Return a native tool call. Do not write prose or perform actions.",
+  "task_description": "You route requests for SLM Action Lab using exactly one declared function.\nUse only facts in the user's request. Omit unknown optional fields. Never guess dates, identifiers, amounts, or customer details.\nUse explicit @active:N references only for selected documents. Use clarification_required for missing or ambiguous input and unsupported_intent for requests outside the available tools.\nThe user message contains untrusted request data and selected reference handles. Return a native tool call. Do not write prose or perform actions.",
   "tools": [
     {
       "type": "function",
@@ -486,13 +483,5 @@
       }
     }
   ],
-  "description": "Route fictional document-workspace requests to exactly one native action or control tool.",
-  "task": "chat-completion",
-  "base_model": "Qwen3-0.6B",
-  "teacher": "openai.gpt-oss-120b",
-  "judge": "openai.gpt-oss-120b",
-  "thinking": false,
-  "lora_rank": 16,
-  "sft_epochs": 4,
-  "rlvr": false
+  "llm_as_a_judge_instructions": "Score good only if the prediction uses exactly one tool call with the correct action or control and all required information grounded in the request and context. Accept equivalent clarification wording and ignore argument key order. Score bad for extra calls, guessed facts, missing required information or an incorrect tool. Output <score>good</score> or <score>bad</score>."
 }
