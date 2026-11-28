@@ -6,7 +6,8 @@ fixture_dir="$(mktemp -d /tmp/slm-integration.XXXXXXXX)"
 compose=(docker compose -p "$project")
 cleanup() {
   result=$?
-  docker rm -fv "$project-db" "$project-provider" "$project-inaccessible" >/dev/null 2>&1 || true
+  docker rm -fv "$project-db" "$project-provider" "$project-inaccessible" "$project-restored" >/dev/null 2>&1 || true
+  docker volume rm "${project}_restored" >/dev/null 2>&1 || true
   rm -f /tmp/"$project".log
   if (( result != 0 )); then
     "${compose[@]}" logs --no-color app >&2 || true
@@ -19,6 +20,24 @@ trap cleanup EXIT
 openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=model-fixture \
   -addext subjectAltName=DNS:model-fixture -keyout "$fixture_dir/key.pem" -out "$fixture_dir/cert.pem" 2>/dev/null
 chmod 0644 "$fixture_dir/cert.pem"
+export COMPOSE_FILE="${COMPOSE_FILE:-$PWD/compose.yaml}"
+"${compose[@]}" up --build --wait --wait-timeout 90
+container="$("${compose[@]}" ps -q app)"
+test "$(docker inspect --format '{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}} {{.Config.User}}' "$container")" = "3221225472 2000000000 node"
+image="$(docker inspect --format '{{.Image}}' "$container")"
+"${compose[@]}" exec -T app node -e '
+  const a=require("node:assert/strict");
+  a.equal(process.env.NODE_EXTRA_CA_CERTS,undefined);
+  Promise.all([
+    fetch("http://127.0.0.1:3000/api/health/live").then(r=>a.equal(r.status,200)),
+    fetch("http://127.0.0.1:3000/api/health/ready").then(async r=>{a.equal(r.status,503);a.equal((await r.json()).stage,"unclaimed")}),
+    fetch("http://127.0.0.1:3000/api/diagnostics").then(r=>a.equal(r.status,401)),
+  ]).catch(e=>{console.error(e);process.exitCode=1});'
+docker run --rm --network none --cpus 2 --memory 3g --entrypoint node "$image" scripts/speech-smoke.mjs 3221225472
+for cli in /opt/slm-speech/bin/whisper-cli /opt/slm-speech/piper/piper /usr/bin/libreoffice; do
+  docker run --rm --network none --entrypoint "$cli" "$image" --help >/dev/null 2>&1
+done
+echo "Zero-configuration liveness, native executables and Docker resource settings verified."
 cat > "$fixture_dir/compose.yaml" <<EOF_COMPOSE
 services:
   app:
@@ -27,8 +46,19 @@ services:
     volumes:
       - $fixture_dir/cert.pem:/run/slm-fixture-ca.pem:ro
 EOF_COMPOSE
-export COMPOSE_FILE="${COMPOSE_FILE:-$PWD/compose.yaml}:$fixture_dir/compose.yaml"
-"${compose[@]}" up --build --wait --wait-timeout 90
+export COMPOSE_FILE="$COMPOSE_FILE:$fixture_dir/compose.yaml"
+if [[ "${SLM_BROWSER_TEST:-0}" == 1 ]]; then
+  cat > "$fixture_dir/browser.yaml" <<'EOF_COMPOSE'
+services:
+  app:
+    ports: ["127.0.0.1::3000"]
+EOF_COMPOSE
+  export COMPOSE_FILE="$COMPOSE_FILE:$fixture_dir/browser.yaml"
+fi
+"${compose[@]}" up --no-build --wait --wait-timeout 90
+if [[ "${SLM_BROWSER_TEST:-0}" == 1 ]]; then
+  node tests/browser-e2e.mjs "http://$("${compose[@]}" port app 3000)" unclaimed
+fi
 export SLM_TEST_DB_PASSWORD
 SLM_TEST_DB_PASSWORD="$(openssl rand -hex 24)"
 POSTGRES_PASSWORD="$SLM_TEST_DB_PASSWORD" docker run -d --name "$project-db" \
@@ -63,19 +93,48 @@ done
 "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD -e SLM_TEST_PROVIDER_KEY app node --input-type=module - < tests/boot-check.mjs
 cat tests/document-fixtures.mjs tests/boot-check.mjs tests/documents-integration.mjs |
   "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD app node --input-type=module - documents
-"${compose[@]}" restart app
-"${compose[@]}" up --no-build --wait --wait-timeout 90
+before="$("${compose[@]}" ps -q app)"
+"${compose[@]}" up --no-build --force-recreate --wait --wait-timeout 90
+test "$before" != "$("${compose[@]}" ps -q app)"
 cat tests/document-fixtures.mjs tests/boot-check.mjs tests/documents-integration.mjs |
   "${compose[@]}" exec -T app node --input-type=module - documents-persisted
 "${compose[@]}" exec -T app node --input-type=module - persisted < tests/boot-check.mjs
 cat tests/boot-check.mjs tests/agent-integration.mjs |
   "${compose[@]}" exec -T -e SLM_TEST_DB_PASSWORD -e SLM_TEST_PROVIDER_KEY -e SLM_TEST_MODEL_PUBLIC_KEY -e SLM_TEST_SCHEMA_HASH \
     app node --input-type=module - agent
+if [[ "${SLM_BROWSER_TEST:-0}" == 1 ]]; then
+  "${compose[@]}" exec -T app cat /app/data/tmp/smoke-password |
+    node tests/browser-e2e.mjs "http://$("${compose[@]}" port app 3000)"
+fi
+
+# Restore a stopped app/DB pair into a fresh volume and a freshly created fixture database.
+umask 077
+"${compose[@]}" exec -T app cat /app/data/tmp/smoke-password > "$fixture_dir/admin-password"
+"${compose[@]}" stop app
+docker run --rm --network none --mount "type=volume,src=${project}_slm_data,dst=/app/data,readonly" \
+  --entrypoint tar "$image" --exclude=./tmp -C /app/data -cf - . > "$fixture_dir/volume.tar"
+docker exec "$project-db" pg_dump --format=custom -U slm_fixture replacement > "$fixture_dir/database.dump"
+docker exec "$project-db" psql -X -q -v ON_ERROR_STOP=1 -U slm_fixture -d fixture \
+  -c 'ALTER DATABASE replacement RENAME TO before_restore;' -c 'CREATE DATABASE replacement OWNER slm_app;'
+docker exec -i "$project-db" pg_restore --exit-on-error --no-owner --role=slm_app \
+  -U slm_fixture -d replacement < "$fixture_dir/database.dump"
+docker volume create "${project}_restored" >/dev/null
+docker run --rm -i --network none --user root --mount "type=volume,src=${project}_restored,dst=/app/data" \
+  --entrypoint tar "$image" --numeric-owner -C /app/data -xf - < "$fixture_dir/volume.tar"
+docker run -d --name "$project-restored" --network "${project}_default" \
+  --mount "type=volume,src=${project}_restored,dst=/app/data" "$image" >/dev/null
+for attempt in {1..30}; do
+  if docker exec "$project-restored" node -e 'fetch("http://127.0.0.1:3000/api/health/live").then(r=>{if(!r.ok)process.exitCode=1}).catch(()=>process.exitCode=1)'; then break; fi
+  sleep 1
+done
+docker exec -i "$project-restored" sh -c 'umask 077 && cat > /app/data/tmp/smoke-password' < "$fixture_dir/admin-password"
+docker exec -i "$project-restored" node --input-type=module - restored < tests/boot-check.mjs
+docker rm -f "$project-restored" >/dev/null
+"${compose[@]}" up --no-build --wait --wait-timeout 90
 docker stop "$project-db" >/dev/null
 "${compose[@]}" exec -T app node --input-type=module - database-offline < tests/boot-check.mjs
 
 # Reuse the exact image with an existing volume deliberately made inaccessible.
-image="$(docker inspect --format '{{.Image}}' "$("${compose[@]}" ps -q app)")"
 "${compose[@]}" exec -T -u 0 app sh -c 'chown root:root /app/data'
 "${compose[@]}" stop app
 if timeout 20s docker run --rm --name "$project-inaccessible" --mount "type=volume,src=${project}_slm_data,dst=/app/data" "$image" > /tmp/"$project".log 2>&1; then

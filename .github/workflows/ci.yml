@@ -23,4 +23,7 @@ jobs:
       - run: npm run training:audit
       - run: npm test
       - run: npm run build
+      - run: npx playwright-core install --with-deps chromium
       - run: npm run test:integration
+        env:
+          SLM_BROWSER_TEST: "1"

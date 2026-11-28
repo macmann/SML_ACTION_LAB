@@ -23,6 +23,13 @@ function toEntry(row: Row): SearchRow {
 export type Workspace = { namespace: string; generation: number; index: DocumentIndex; size: number; reconciledAt: number };
 const globalState = globalThis as typeof globalThis & { slmDocuments?: Workspace };
 
+export function indexDiagnostics(generation: number) {
+  const cached = globalState.slmDocuments;
+  if (!cached || cached.generation !== generation) return { status: "cold", limits: maximum };
+  return { status: "loaded", documents: cached.index.documents.size, sections: cached.index.records.size,
+    characters: cached.index.characters, originalBytes: cached.size, limits: maximum };
+}
+
 async function reconcile(workspace: Workspace) {
   const valid = new Set(workspace.index.documents.keys());
   for (const storage of ["files", "artifacts"] as const) {
@@ -46,7 +53,8 @@ async function initialized(pool: pg.Pool, generation: number) {
   const index = new DocumentIndex();
   let chars = 0;
   for (const row of rows) chars += row.text?.length ?? 0;
-  if (rows.length > maximum.sections || chars > maximum.characters) {
+  if (rows.length > maximum.sections || chars > maximum.characters ||
+      new Set(rows.map((row) => row.id)).size > maximum.documents) {
     throw new WorkspaceError("The workspace exceeds the local index capacity.", 503);
   }
   index.add(rows.map(toEntry));
@@ -74,9 +82,10 @@ async function readBody(request: Request, max: number) {
   if (!reader) throw new WorkspaceError("The file is empty.");
   const chunks: Uint8Array[] = [];
   let length = 0;
-  const abort = AbortSignal.timeout(60_000);
+  const abort = AbortSignal.any([request.signal, AbortSignal.timeout(60_000)]);
   const canceled = () => { void reader.cancel().catch(() => {}); };
   abort.addEventListener("abort", canceled, { once: true });
+  if (abort.aborted) canceled();
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -109,7 +118,7 @@ export function uploadDocument(request: Request, metadata: { filename: string; t
       format = fileType(metadata.filename, request.headers.get("content-type") ?? "");
       bytes = await readBody(request, safeMemoryLimit);
       if (workspace.size + bytes.length > maximum.files) throw new WorkspaceError("The workspace storage limit has been reached.", 413);
-      sections = await extractIsolated(bytes, format);
+      sections = await extractIsolated(bytes, format, request.signal);
     } catch (error) {
       if (error instanceof DocumentError) throw new WorkspaceError(error.message, 422);
       throw error;

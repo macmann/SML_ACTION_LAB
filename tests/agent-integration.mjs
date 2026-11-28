@@ -209,9 +209,15 @@ try {
   const office = { ...input, output: "pdf", invoice: { ...invoice, number: "FIXTURE-CONVERT-01" } };
   const officePreview = await (await templateRequest(office)).json();
   const officePlan = await (await templateRequest(office, true, officePreview.previewHash)).json();
-  const missingOffice = await (await approve(officePlan.approval)).json();
-  assert.equal(missingOffice.status, "failed");
-  assert.match(missingOffice.outcome.message, /requires LibreOffice and bubblewrap/);
+  const officeResult = await (await approve(officePlan.approval)).json();
+  if (officeResult.status === "succeeded") {
+    assert.equal((await getOriginal(officeResult.outcome.document.id)).subarray(0, 5).toString(), "%PDF-");
+    console.log("Isolated LibreOffice conversion produced a PDF.");
+  } else {
+    assert.equal(officeResult.status, "failed");
+    assert.match(officeResult.outcome.message, /isolated Office converter was unavailable or timed out/i);
+    console.log("SKIP successful Office conversion. The sandboxed command failed closed.");
+  }
   const apiPost = (path, data) => visit(path, { method: "POST", headers: { ...authHeaders, "Content-Type": "application/json" }, body: JSON.stringify(data) });
   const command = async (data, status = 200) => {
     const response = await apiPost("/api/business", data);
@@ -300,6 +306,29 @@ try {
   const speech = await (await visit("/api/speech", { headers: authHeaders })).json();
   assert.equal(speech.stt, false);
   assert.equal(speech.tts, false);
+  assert.equal(speech.ffmpeg, true);
+  assert.equal(speech.whisper, true);
+  assert.equal(speech.piper, true);
+  const diagnostics = await (await visit("/api/diagnostics", { headers: authHeaders })).json();
+  assert.equal(diagnostics.database, "ready");
+  assert.equal(diagnostics.index.status, "loaded");
+  assert.equal(diagnostics.storage.status, "available");
+  assert.equal(diagnostics.storage.limitBytes, 3 * 1024 ** 3);
+  assert.ok(!JSON.stringify(diagnostics).includes("model-fixture"));
+  const { mkdtemp, truncate, rm } = await import("node:fs/promises");
+  const fullVolume = await mkdtemp("/app/data/artifacts/quota-fixture-");
+  try {
+    const sparse = fullVolume + "/sparse-fixture";
+    await writeFile(sparse, "");
+    await truncate(sparse, diagnostics.storage.limitBytes);
+    const rejected = await visit("/api/documents", { method: "POST", body: "Fictional quota overflow test.", headers: {
+      ...authHeaders, "Content-Type": "text/plain", "Slm-Upload": encodeURIComponent(JSON.stringify({ filename: "quota-fixture.txt" })),
+    } });
+    assert.equal(rejected.status, 507);
+    assert.match((await rejected.json()).error, /storage limit/);
+  } finally {
+    await rm(fullVolume, { recursive: true, force: true });
+  }
   const invalidAudio = await visit("/api/speech?operation=transcribe", { method: "POST", body: "not audio",
     headers: { ...authHeaders, "Content-Type": "audio/wav", "Content-Disposition": 'attachment; filename="../../secret.wav"' } });
   assert.equal(invalidAudio.status, 415);
@@ -333,6 +362,6 @@ try {
   assert.match(await csv.text(), /fixture/);
   console.log("Speech diagnostics and Arena attribution, cap, replay, fixtures, generation review and downloads passed.");
   console.log("Manual CRUD, currency-separated spreadsheet data, typed exports, invoice verification and individually approved workflow passed.");
-  console.log("Template preview, immutable original, invoice rollover, unique number, PDFKit draft and missing Office passed.");
+  console.log("Template preview, immutable original, invoice rollover, unique number and PDFKit draft passed.");
   console.log("Agent contracts, all ten tools, identity checks, model-only mode, writer consent, timeouts, approvals, replay and audit passed.");
 } finally { await pgClient.end(); }

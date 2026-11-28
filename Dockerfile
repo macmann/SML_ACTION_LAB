@@ -44,9 +44,12 @@ CMD ["sh", "-c", "umask 077 && node scripts/init-data.mjs && exec node server.js
 
 FROM runtime AS speech-runtime
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg=7:5.1.9-0+deb12u1 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg=7:5.1.9-0+deb12u1 bubblewrap=0.8.0-2+deb12u1 util-linux=2.38.1-5+deb12u3 \
+    libreoffice-writer=4:7.4.7-1+deb12u14 fonts-liberation=1:1.07.4-11 \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=speech-native /opt/slm-speech /opt/slm-speech
 USER node
 
-# The default target remains zero-config and does not download native speech assets.
-FROM runtime AS default
+# Native executables are bundled. Models are installed separately by the operator.
+FROM speech-runtime AS default

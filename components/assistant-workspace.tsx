@@ -96,6 +96,7 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
       <label className="grid gap-1">Request
         <textarea rows={4} required maxLength={2000} className={input} value={request} onChange={(event) => setRequest(event.target.value)} />
       </label>
+      <p className="text-sm text-[var(--muted)]">Use fictional text for provider requests. The selected endpoint may log prompts and responses.</p>
       <LocalSpeech onTranscript={setRequest} readText={readText} />
       <fieldset className="grid gap-2">
         <legend>Active document references</legend>
@@ -115,7 +116,7 @@ export function AssistantWorkspace({ writerModel, shareEnabled, comparisonConfig
       </label>}
       {mode === "strict" && (writer || experimental) && <label className="flex gap-2">
         <input type="checkbox" checked={share && shareEnabled} disabled={!shareEnabled}
-          onChange={(event) => setShare(event.target.checked)} />Send extracted text from the selected document to the chosen provider for this turn. Binary files are never sent.{!shareEnabled && " (enable in Preferences first)"}
+          onChange={(event) => setShare(event.target.checked)} />Send synthetic extracted text to the chosen provider for this turn. The endpoint may log the request and response.{!shareEnabled && " (enable in Preferences first)"}
       </label>}
       <Button disabled={busy || !available || !context} className="justify-self-start">{busy ? "Working…" : "Run turn"}</Button>
     </form>

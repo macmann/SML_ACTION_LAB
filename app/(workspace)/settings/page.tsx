@@ -29,6 +29,7 @@ export default async function SettingsPage() {
   return (
     <>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Settings</h1>
+      <a className="underline" href="/api/diagnostics">View authenticated diagnostics (JSON)</a>
       <p className="text-[var(--muted)]">{!settings.database ? "Set up PostgreSQL to continue." :
         settings.providerChoice === "skipped" ? "Setup complete in manual mode." :
         settings.providerChoice ? "Setup complete with a configured provider." : "Set up Distil or continue in manual mode."}</p>
@@ -150,7 +151,7 @@ export default async function SettingsPage() {
           <label className="grid gap-1">Requests per minute
             <input className={inputClass} name="requestsPerMinute" type="number" required min={1} max={120} defaultValue={prefs.requestsPerMinute} />
           </label>
-          <label className="flex gap-2"><input name="shareDocuments" type="checkbox" defaultChecked={prefs.shareDocuments} />Allow document content to be shared with configured providers</label>
+          <label className="flex gap-2"><input name="shareDocuments" type="checkbox" defaultChecked={prefs.shareDocuments} />Allow synthetic document content to be shared with configured providers</label>
         </SettingsForm>
       </Panel>
     </>

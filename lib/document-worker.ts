@@ -1,12 +1,15 @@
 import { fork } from "node:child_process";
 import { join } from "node:path";
 import { DocumentError, type Format, type Section, type SheetData, type TableOptions } from "./extraction";
+import { heavyJob, HeavyJobError } from "./heavy-jobs.mjs";
+import { WorkspaceError } from "./database";
 
 function parseIsolated<T>(bytes: Buffer, format: Format, table?: TableOptions): Promise<T> {
   return new Promise((resolve, reject) => {
     const worker = fork(join(/* turbopackIgnore: true */ process.cwd(), "scripts/extract-document.mjs"), [], {
       stdio: ["ignore", "ignore", "ignore", "ipc"], serialization: "advanced",
       execArgv: ["--max-old-space-size=384"],
+      env: { PATH: "/usr/bin:/bin", LANG: "C.UTF-8", NODE_ENV: "production" },
     });
     type Result = { value: T } | { error: string };
     let result: Result | undefined;
@@ -22,10 +25,19 @@ function parseIsolated<T>(bytes: Buffer, format: Format, table?: TableOptions): 
   });
 }
 
-export function extractIsolated(bytes: Buffer, format: Format) {
-  return parseIsolated<Section[]>(bytes, format);
+async function queuedParse<T>(bytes: Buffer, format: Format, table?: TableOptions, signal?: AbortSignal): Promise<T> {
+  try {
+    return await heavyJob(() => parseIsolated<T>(bytes, format, table), signal);
+  } catch (error) {
+    if (error instanceof HeavyJobError) throw new WorkspaceError(error.message, error.status);
+    throw error;
+  }
+}
+
+export function extractIsolated(bytes: Buffer, format: Format, signal?: AbortSignal) {
+  return queuedParse<Section[]>(bytes, format, undefined, signal);
 }
 
 export function extractTableIsolated(bytes: Buffer, format: "csv" | "xlsx", options: TableOptions = {}) {
-  return parseIsolated<SheetData>(bytes, format, options);
+  return queuedParse<SheetData>(bytes, format, options);
 }

@@ -58,10 +58,22 @@ assert.equal(liveness.status, 200);
 assert.deepEqual(await liveness.json(), { status: "alive" });
 const passwordFile = "/app/data/tmp/smoke-password";
 
-if (process.argv.includes("database-offline")) {
+if (process.argv.includes("restored")) {
+  const cookie = sessionFrom(await submit("/login", { password: await readFile(passwordFile, "utf8") }), "/assistant");
+  const headers = { Cookie: cookie };
+  const list = await visit("/api/documents?q=QZ-381", { headers });
+  assert.equal(list.status, 200);
+  const document = (await list.json()).results.find((item) => item.filename === "Assistant fixture.txt");
+  assert.ok(document);
+  const download = await visit("/api/documents/" + document.id + "/download", { headers });
+  assert.equal(download.status, 200);
+  assert.match(await download.text(), /Invoice ID: QZ-381/);
+  console.log("Restored database and fresh volume recovered admin sign-in, encrypted settings, search and original download.");
+} else if (process.argv.includes("database-offline")) {
   const cookie = sessionFrom(await submit("/login", { password: await readFile(passwordFile, "utf8") }), "/assistant");
   assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).status, 200);
   assert.equal((await visit("/api/documents", { headers: { Cookie: cookie } })).status, 503);
+  assert.equal((await (await visit("/api/diagnostics", { headers: { Cookie: cookie } })).json()).database, "unavailable");
   console.log("Administrator sign-in and Settings remained available during a PostgreSQL outage.");
 } else if (process.argv.includes("persisted")) {
   await readiness("ready", "configured", "skipped");

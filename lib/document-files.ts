@@ -2,6 +2,8 @@ import { constants } from "node:fs";
 import { link, lstat, mkdir, open, readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { dataRoot } from "./data.mjs";
+import { WorkspaceError } from "./database";
+import { storageCapacity } from "./storage-capacity";
 
 export const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,6 +30,10 @@ async function original(namespace: string, id: string, storage: Storage) {
 
 export async function writeOriginal(namespace: string, id: string, bytes: Buffer, storage: Storage = "files") {
   const path = await original(namespace, id, storage);
+  const capacity = await storageCapacity();
+  if (capacity.bytes + bytes.length > capacity.limitBytes || capacity.freeBytes < capacity.reserveBytes + bytes.length) {
+    throw new WorkspaceError("The app volume is at its storage limit. Free space or archive unused documents.", 507);
+  }
   const temporary = path + ".pending";
   const file = await open(/* turbopackIgnore: true */ temporary,
     constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);

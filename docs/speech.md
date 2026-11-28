@@ -1,12 +1,8 @@
 # Local speech
 
-Use the optional speech build on Linux x86-64 with AVX2. It runs in the same app container on the same persistent volume. The base image boots and displays capability diagnostics without the speech binaries or models.
+The production Compose image includes FFmpeg, whisper.cpp and Piper CPU binaries on Linux x86-64 with AVX2. It boots and displays missing model diagnostics before model installation.
 
-```sh
-docker compose -f compose.yaml -f compose.speech.yaml up -d --build
-```
-
-In Coolify, choose the `speech-runtime` build target or apply the Compose override. HTTPS and browser microphone permission are required for push-to-talk. In Settings, enable speech, select Whisper Base and a language, and optionally enable read-aloud. Review the recognized text and copy it into the editable chat box. Send it as a separate action. Speech processing stays inside the app container.
+HTTPS and browser microphone permission are required for push-to-talk. In Settings, enable speech, select Whisper Base and a language, and optionally enable read-aloud. Review the recognized text and copy it into the editable chat box. Send it as a separate action. Speech processing stays inside the app container.
 
 ## Install models
 
@@ -23,6 +19,6 @@ The installer verifies the supplied SHA-256 lock and recorded upstream digests a
 
 ## Limits and provenance
 
-The browser stops recording at the configured limit, up to 60 seconds. The server caps the input at 8 MiB, checks permitted media signatures, and decodes through FFmpeg using local pipes. Whisper uses two CPU threads. Speech and Office share one running job and three waiting slots per app process. Saturation and missing capabilities surface in the UI, and ordinary typed chat remains available. Each native job gets a private temporary directory and a bounded deadline.
+The browser stops recording at the configured limit, up to 60 seconds. The server caps the input at 8 MiB, checks permitted media signatures, and decodes through FFmpeg using local pipes. Whisper uses two CPU threads. Speech, Office and document parsing share one running job and three waiting slots per app process. Saturation and missing capabilities surface in the UI, and ordinary typed chat remains available. Each native job gets a private temporary directory and a bounded deadline.
 
 The speech image builds pinned whisper.cpp v1.8.3 (MIT), installs Debian FFmpeg 5.1.9 (distribution copyright details in the image), and packages the archived Piper CPU release 2023.11.14-2 (MIT project license). The Piper distribution bundles native dependencies. Refer to their upstream license terms and the separate model card. [whisper.cpp v1.8.3](https://github.com/ggml-org/whisper.cpp/tree/v1.8.3) · [Piper release](https://github.com/rhasspy/piper/releases/tag/2023.11.14-2) · [Debian FFmpeg](https://packages.debian.org/bookworm/ffmpeg)

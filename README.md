@@ -4,7 +4,7 @@ A standalone, single-admin document and productivity workspace. The workspace bo
 
 ## Run in Coolify
 
-Use the Docker Compose build pack with [compose.yaml](compose.yaml). Attach the application domain to the `app` service on port 3000 and enable HTTPS. The project creates one app container and the `slm_data` named volume on its Compose network. Build and first boot require no project environment variables or external services.
+Use the Docker Compose build pack with [compose.yaml](compose.yaml). Attach the application domain to the `app` service on port 3000 and enable HTTPS. The project creates one app container and the `slm_data` named volume on its Compose network. Build and first boot require no project environment variables or external runtime services. See deployment, backup, restore, and rollback details. [Coolify operator runbook](docs/COOLIFY.md)
 
 Open the application domain. In the app container terminal, run the following command and enter the result privately in the first-run wizard along with a new admin password. Each invocation invalidates the previous token and issues a new one that expires in 15 minutes.
 
@@ -42,9 +42,9 @@ Strict mutations require a compatible endpoint that signs responses with an oper
 
 ## Use local speech and Model Arena
 
-Build the optional speech target and install the offline model bundle to enable push-to-talk and WAV read-aloud. Typed chat works in the default image. [Local speech setup](docs/speech.md)
+Install the offline model bundle to enable push-to-talk and WAV read-aloud with the native binaries in the production image. Typed chat works before model installation. [Local speech setup](docs/speech.md)
 
-Apply migration 5 before opening Model Arena. Run capped routing comparisons on fictional holdout cases or review generation samples separately. [Arena and dataset guide](docs/model-arena.md)
+Apply migration 5 before opening Model Arena. Run capped routing comparisons on fictional holdout cases or review generation samples separately. [Arena and dataset guide](docs/model-arena.md) · [Distil training handoff](docs/DISTIL_TRAINING.md)
 
 ## Develop locally
 
