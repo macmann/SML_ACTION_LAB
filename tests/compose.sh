@@ -131,6 +131,8 @@ docker exec -i "$project-restored" sh -c 'umask 077 && cat > /app/data/tmp/smoke
 docker exec -i "$project-restored" node --input-type=module - restored < tests/boot-check.mjs
 docker rm -f "$project-restored" >/dev/null
 "${compose[@]}" up --no-build --wait --wait-timeout 90
+docker stop "$project-provider" >/dev/null
+"${compose[@]}" exec -T app node --input-type=module - provider-offline < tests/boot-check.mjs
 docker stop "$project-db" >/dev/null
 "${compose[@]}" exec -T app node --input-type=module - database-offline < tests/boot-check.mjs
 

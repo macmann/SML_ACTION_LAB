@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID as testUuid } from "node:crypto";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import { store } from "./lib/bootstrap.mjs";
 
@@ -69,6 +69,15 @@ if (process.argv.includes("restored")) {
   assert.equal(download.status, 200);
   assert.match(await download.text(), /Invoice ID: QZ-381/);
   console.log("Restored database and fresh volume recovered admin sign-in, encrypted settings, search and original download.");
+} else if (process.argv.includes("provider-offline")) {
+  const cookie = sessionFrom(await submit("/login", { password: await readFile(passwordFile, "utf8") }), "/assistant");
+  const headers = { Cookie: cookie, Origin: root, "Content-Type": "application/json" };
+  const result = await visit("/api/agent", { method: "POST", headers,
+    body: JSON.stringify({ id: testUuid(), request: "Find fictional fixture documents", mode: "model_only", active: [] }) });
+  assert.equal(result.status, 502);
+  assert.match((await result.json()).error, /provider failed/i);
+  assert.equal((await visit("/api/documents", { headers })).status, 200);
+  console.log("An unreachable provider failed without fallback while manual document operations remained available.");
 } else if (process.argv.includes("database-offline")) {
   const cookie = sessionFrom(await submit("/login", { password: await readFile(passwordFile, "utf8") }), "/assistant");
   assert.equal((await visit("/settings", { headers: { Cookie: cookie } })).status, 200);
